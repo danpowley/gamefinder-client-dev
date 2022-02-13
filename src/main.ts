@@ -1,8 +1,8 @@
-import Vue from 'vue'
-import App from './App.vue'
+import Vue from "vue";
+import GameFinder from "./fumbbl/pages/gamefinder/GameFinder.vue";
 
 Vue.config.productionTip = false
 
 new Vue({
-  render: h => h(App),
-}).$mount('#app')
+  render: h => h(GameFinder),
+}).$mount('#vuecontent')
