@@ -1,42 +1,49 @@
-import Vue from "vue";
-import Component from 'vue-class-component';
-import Axios from 'axios';
-import { Util } from '../../../core/util';
-
-@Component({
-    template: `
-        <div class="basicbox">
-            <div class="header">Match Offers<div v-show="additionalOffers > 0" class="additionaloffers">Additional offers: {{ additionalOffers }}</div></div>
-            <div class="content" id="offerlistwrapper" @mouseenter="setUiUpdatesPaused(true)" @mouseleave="setUiUpdatesPaused(false)">
-                <div v-show="offers.length === 0" class="nooffers">Sorry, no current offers.</div>
-                <div id="offerlist">
-                    <div v-for="offer in offers" :key="offer.id" class="matchoffer">
-                        <div class="icon external" v-show="offer.external">?</div>
-                        <div class="icon accept" v-show="offer.external">&#x2714;</div>
-                        <div class="icon cancel" @click.prevent="cancelOffer(offer)">&#x2718;</div>
-                        <div class="offeredteam home">
-                            <div class="name">
-                                {{ abbreviate(offer.home.team, 30) }}
-                            </div>
-                            <div class="desc">
-                                TV {{ offer.home.tv }} {{ offer.home.race }}
-                            </div>
+<template>
+    <div class="basicbox">
+        <div class="header">Match Offers<div v-show="additionalOffers > 0" class="additionaloffers">Additional offers: {{ additionalOffers }}</div></div>
+        <div class="content" id="offerlistwrapper" @mouseenter="setUiUpdatesPaused(true)" @mouseleave="setUiUpdatesPaused(false)">
+            <div v-show="offers.length === 0" class="nooffers">Sorry, no current offers.</div>
+            <div id="offerlist">
+                <div v-for="offer in offers" :key="offer.id" class="matchoffer">
+                    <div class="icon external" v-show="offer.external">?</div>
+                    <div class="icon accept" v-show="offer.external">&#x2714;</div>
+                    <div class="icon cancel" @click.prevent="cancelOffer(offer)">&#x2718;</div>
+                    <div class="offeredteam home">
+                        <div class="name">
+                            {{ abbreviate(offer.home.team, 30) }}
                         </div>
-                        <div class="timer" :style="{ width: (100 * offer.timeRemaining / offer.lifetime) + '%', left: (50 - 50 * offer.timeRemaining / offer.lifetime) + '%'}"></div>
-                        <div class="offeredteam away">
-                            <div class="desc">
-                                {{ offer.away.race }} TV {{ offer.away.tv }}
-                            </div>
-                            <div class="name">
-                                {{ abbreviate(offer.away.team, 30) }}
-                            </div>
+                        <div class="desc">
+                            TV {{ offer.home.tv }} {{ offer.home.race }}
+                        </div>
+                    </div>
+                    <div class="timer" :style="{ width: (100 * offer.timeRemaining / offer.lifetime) + '%', left: (50 - 50 * offer.timeRemaining / offer.lifetime) + '%'}"></div>
+                    <div class="offeredteam away">
+                        <div class="desc">
+                            {{ offer.away.race }} TV {{ offer.away.tv }}
+                        </div>
+                        <div class="name">
+                            {{ abbreviate(offer.away.team, 30) }}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    `,
+    </div>
+</template>
+
+<script lang="ts">
+import Vue from "vue";
+import Component from 'vue-class-component';
+import { Util } from '../../../core/util';
+import IBackendApi from "../include/IBackendApi";
+import GameFinderHelpers from "../include/GameFinderHelpers";
+
+@Component({
     props: {
+        isDevMode: {
+            type: Boolean,
+            required: true
+        },
         coachName: {
             type: String,
             required: true
@@ -56,6 +63,7 @@ import { Util } from '../../../core/util';
     }
 })
 export default class OffersComponent extends Vue {
+    private backendApi: IBackendApi | null = null;
     public additionalOffers: number = 0;
     public pendingOffers:any = [];
 
@@ -64,6 +72,7 @@ export default class OffersComponent extends Vue {
     private cancelledOfferIds:number[] = [];
 
     async mounted() {
+        this.backendApi = GameFinderHelpers.getBackendApi(this.$props.isDevMode);
         setInterval(this.tick, 100);
         setInterval(this.getOffers, 1000);
     }
@@ -82,12 +91,12 @@ export default class OffersComponent extends Vue {
 
     private async getOffers() {
         const pre = Date.now();
-        const offers: any = await Axios.post('/api/gamefinder/getoffers', {cheatingCoachName: this.$props.coachName});
+        const offers = await this.backendApi.getOffers(this.$props.coachName);
         const now = Date.now();
 
         const avgTime = now / 2 + pre / 2;
 
-        for (const offer of offers.data) {
+        for (const offer of offers) {
             offer.expiry = avgTime + offer.timeRemaining;
             offer.external = offer.team1.coach.name !== this.$props.coachName
             // Swap teams if the first team is the opponent's
@@ -158,6 +167,10 @@ export default class OffersComponent extends Vue {
         }
 
         const myTeam = this.getMyTeam(offer.home.id);
+
+        if (! myTeam) {
+            return false;
+        }
 
         const isMatchAllowed = myTeam.allow.includes(offer.away.id);
 
@@ -240,8 +253,7 @@ export default class OffersComponent extends Vue {
             if (index !== -1) {
                 this.$props.offers.splice(index, 1);
             }
-            // @christer I've added this one, wasn't in your original set of API calls
-            Axios.post('/api/gamefinder/canceloffer/' + offer.id);
+            this.backendApi.cancelOffer(offer.id);
         }
     }
 
@@ -253,3 +265,4 @@ export default class OffersComponent extends Vue {
         return Util.abbreviate(stringValue, maxCharacters);
     }
 }
+</script>

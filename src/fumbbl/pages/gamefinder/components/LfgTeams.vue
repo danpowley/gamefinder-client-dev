@@ -1,36 +1,42 @@
+<template>
+    <div class="basicbox">
+        <div class="header">Select Teams</div>
+        <div class="content" id="teamswrapper">
+            <div class="lfgList">
+                <div v-for="team in teams" :key="team.id" class="lfgteam">
+                    <input class="teamcheck" type="checkbox" :value="team.id" v-model="checked" @change="toggleTeam">
+                    <img :src="getTeamLogoUrl(team)" />
+                    <div>
+                        <div class="teamname">{{ abbreviate(team.name, 70) }}</div>
+                        <div class="teaminfo"><span title="Seasons and games played">S{{ team.currentSeason }}:G{{ team.gamesPlayedInSeason }}</span> TV{{ team.teamValue/1000 }}k {{ team.race }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="controls">
+                <div id="selectall">
+                    <input type="checkbox" id="all" @change="toggleAll"/>
+                    <label for="all">Select All</label>
+                </div>
+                <input type="button" id="showlfg" value="Done" @click="showLfg" />
+            </div>
+        </div>
+    </div>
+</template>
+
+<script lang="ts">
 import Vue from "vue";
 import Component from 'vue-class-component';
 import { Util } from '../../../core/util';
-import Axios from 'axios';
 import GameFinderPolicies from '../include/GameFinderPolicies';
 import GameFinderHelpers from '../include/GameFinderHelpers';
+import IBackendApi from "../include/IBackendApi";
 
 @Component({
-    template: `
-        <div class="basicbox">
-            <div class="header">Select Teams</div>
-            <div class="content" id="teamswrapper">
-                <div class="lfgList">
-                    <div v-for="team in teams" :key="team.id" class="lfgteam">
-                        <input class="teamcheck" type="checkbox" :value="team.id" v-model="checked" @change="toggleTeam">
-                        <img :src="getTeamLogoUrl(team)" />
-                        <div>
-                            <div class="teamname">{{ abbreviate(team.name, 70) }}</div>
-                            <div class="teaminfo"><span title="Seasons and games played">S{{ team.currentSeason }}:G{{ team.gamesPlayedInSeason }}</span> TV{{ team.teamValue/1000 }}k {{ team.race }}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="controls">
-                    <div id="selectall">
-                        <input type="checkbox" id="all" @change="toggleAll"/>
-                        <label for="all">Select All</label>
-                    </div>
-                    <input type="button" id="showlfg" value="Done" @click="showLfg" />
-                </div>
-            </div>
-        </div>
-    `,
-    props: {
+    props: {  
+        isDevMode: {
+            type: Boolean,
+            required: true
+        },
         coachName: {
             type: String,
             required: true
@@ -38,10 +44,12 @@ import GameFinderHelpers from '../include/GameFinderHelpers';
     }
 })
 export default class LfgTeamsComponent extends Vue {
+    private backendApi: IBackendApi | null = null;
     public teams: any[] = [];
     public checked: boolean[] = [];
 
     async mounted() {
+        this.backendApi = GameFinderHelpers.getBackendApi(this.$props.isDevMode);
         await this.reloadTeams();
     }
 
@@ -61,8 +69,7 @@ export default class LfgTeamsComponent extends Vue {
     }
 
     private async getTeamsCanLfg() {
-        const result = await Axios.post('/api/coach/teams/' + this.$props.coachName);
-        let allTeams = result.data.teams;
+        const allTeams = await this.backendApi.allTeams(this.$props.coachName);
         const teams = allTeams.filter(GameFinderPolicies.teamCanLfg);
         return teams;
     }
@@ -82,9 +89,9 @@ export default class LfgTeamsComponent extends Vue {
         const checked = event.target.checked;
 
         if (checked) {
-            Axios.post('/api/gamefinder/addallteams', {cheatingCoachName: this.$props.coachName});
+            this.backendApi.addAllTeams(this.$props.coachName);
         } else {
-            Axios.post('/api/gamefinder/removeallteams', {cheatingCoachName: this.$props.coachName});
+            this.backendApi.removeAllTeams(this.$props.coachName);
         }
 
         const checkboxes = document.getElementsByClassName('teamcheck');
@@ -108,9 +115,9 @@ export default class LfgTeamsComponent extends Vue {
         const id = target.value;
 
         if (checked) {
-            Axios.post('/api/gamefinder/addteam/' + id);
+            this.backendApi.addTeam(id);
         } else {
-            Axios.post('/api/gamefinder/removeteam/' + id);
+            this.backendApi.removeTeam(id);
         }
 
         this.updateAllChecked();
@@ -143,3 +150,4 @@ export default class LfgTeamsComponent extends Vue {
         return GameFinderHelpers.getTeamLogoUrl(team);
     }
 }
+</script>

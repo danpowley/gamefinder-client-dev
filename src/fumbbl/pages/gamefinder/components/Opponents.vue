@@ -1,67 +1,73 @@
-import Vue from "vue";
-import Component from 'vue-class-component';
-import Axios from 'axios';
-import { Util } from '../../../core/util';
-import GameFinderHelpers from '../include/GameFinderHelpers';
-
-@Component({
-    template: `
-        <div id="opponentslist" @mouseenter="setUiUpdatesPaused(true)" @mouseleave="setUiUpdatesPaused(false)">
-            <div class="expandcollapseall" v-show="visibleOpponents.length > 0"><a href="#" @click.prevent="expandAllOpponents()">Expand</a> <a href="#" @click.prevent="collapseAllOpponents()">Collapse</a></div>
-            <div>
-                <strong>{{ isOwnTeamSelected ? 'Opponents filtered by selected team.' : 'All opponents on Gamefinder' }}</strong>
-                <span
-                    v-show="uiUpdatesPaused"
-                    class="frozentag"
-                    title="New opponents won't be added/removed until you move your mouse away from this area. This is to prevent the page moving whilst you browse opponents."
-                    >Frozen</span>
+<template>
+    <div id="opponentslist" @mouseenter="setUiUpdatesPaused(true)" @mouseleave="setUiUpdatesPaused(false)">
+        <div class="expandcollapseall" v-show="visibleOpponents.length > 0"><a href="#" @click.prevent="expandAllOpponents()">Expand</a> <a href="#" @click.prevent="collapseAllOpponents()">Collapse</a></div>
+        <div>
+            <strong>{{ isOwnTeamSelected ? 'Opponents filtered by selected team.' : 'All opponents on Gamefinder' }}</strong>
+            <span
+                v-show="uiUpdatesPaused"
+                class="frozentag"
+                title="New opponents won't be added/removed until you move your mouse away from this area. This is to prevent the page moving whilst you browse opponents."
+                >Frozen</span>
+        </div>
+        <div v-show="visibleOpponents.length === 0">No opponents available.</div>
+        <div v-for="opponent in visibleOpponents" :key="opponent.id" class="opponent">
+            <div class="coach" :class="{fadeout: fadeOutId === 'coach' + opponent.id}">
+                <a class="disclosure" @click.prevent="expandOpponent(opponent)" href="#">
+                    <span class="showhideicon" v-if="isExpanded(opponent)">&#x25bc;</span>
+                    <span class="showhideicon" v-else>&#x25b6;</span>
+                    <span class="teamcount" title="Teams listed for this opponent">{{ opponent.teams.filter((o) => o.visible).length }}</span>
+                    {{ opponent.name }}
+                </a>
+                <span class="ranking">
+                    {{ opponent.ranking }}
+                </span>
+                <span v-show="! isExpanded(opponent)"><a href="#" class="hidecoach" @click.prevent="hideCoach(opponent.id, opponent.name)">hide</a></span>
             </div>
-            <div v-show="visibleOpponents.length === 0">No opponents available.</div>
-            <div v-for="opponent in visibleOpponents" :key="opponent.id" class="opponent">
-                <div class="coach" :class="{fadeout: fadeOutId === 'coach' + opponent.id}">
-                    <a class="disclosure" @click.prevent="expandOpponent(opponent)" href="#">
-                        <span class="showhideicon" v-if="isExpanded(opponent)">&#x25bc;</span>
-                        <span class="showhideicon" v-else>&#x25b6;</span>
-                        <span class="teamcount" title="Teams listed for this opponent">{{ opponent.teams.filter((o) => o.visible).length }}</span>
-                        {{ opponent.name }}
-                    </a>
-                    <span class="ranking">
-                        {{ opponent.ranking }}
-                    </span>
-                    <span v-show="! isExpanded(opponent)"><a href="#" class="hidecoach" @click.prevent="hideCoach(opponent.id, opponent.name)">hide</a></span>
-                </div>
-                <div v-show="isExpanded(opponent)">
-                    <div v-for="oppTeam in opponent.teams" v-if="oppTeam.visible" :key="oppTeam.id" class="team" :class="{fadeout: fadeOutId === 'team' + oppTeam.id}">
-                        <div class="logo">
-                            <img :src="getTeamLogoUrl(oppTeam)" />
+            <div v-show="isExpanded(opponent)">
+                <div v-for="oppTeam in opponent.teams" v-if="oppTeam.visible" :key="oppTeam.id" class="team" :class="{fadeout: fadeOutId === 'team' + oppTeam.id}">
+                    <div class="logo">
+                        <img :src="getTeamLogoUrl(oppTeam)" />
+                    </div>
+                    <div class="details">
+                        <div class="name">{{ abbreviate(oppTeam.name, 55) }}</div>
+                        <div class="info">
+                            <span v-show="isOfferedBySelectedOwnTeam(oppTeam)" class="offeredtag">Offered</span>
+                            <!-- @christer, I've made up some values here oppTeam.currentSeason and oppTeam.gamesPlayedInSeason -->
+                            <span title="Seasons and games played">S{{ oppTeam.currentSeason }}:G{{ oppTeam.gamesPlayedInSeason }}</span> TV {{ oppTeam.teamValue / 1000 }}k {{ oppTeam.race }}
                         </div>
-                        <div class="details">
-                            <div class="name">{{ abbreviate(oppTeam.name, 55) }}</div>
-                            <div class="info">
-                                <span v-show="isOfferedBySelectedOwnTeam(oppTeam)" class="offeredtag">Offered</span>
-                                <!-- @christer, I've made up some values here oppTeam.currentSeason and oppTeam.gamesPlayedInSeason -->
-                                <span title="Seasons and games played">S{{ oppTeam.currentSeason }}:G{{ oppTeam.gamesPlayedInSeason }}</span> TV {{ oppTeam.teamValue / 1000 }}k {{ oppTeam.race }}
-                            </div>
-                        </div>
-                        <div class="links">
-                            <template v-if="isOwnTeamSelected">
-                                <template v-if="isOfferedBySelectedOwnTeam(oppTeam)">
-                                    <span>Offered</span>
-                                </template>
-                                <template v-else>
-                                    <a href="#" @click.prevent="sendOffer(oppTeam)">Offer</a>
-                                </template>
-                                <a href="#" @click.prevent="hideMatch(oppTeam.id)">Hide</a>
+                    </div>
+                    <div class="links">
+                        <template v-if="isOwnTeamSelected">
+                            <template v-if="isOfferedBySelectedOwnTeam(oppTeam)">
+                                <span>Offered</span>
                             </template>
-                            <a href="#" @click.prevent="openModal('ROSTER', {team: oppTeam})">Roster</a>
-                        </div>
+                            <template v-else>
+                                <a href="#" @click.prevent="sendOffer(oppTeam)">Offer</a>
+                            </template>
+                            <a href="#" @click.prevent="hideMatch(oppTeam.id)">Hide</a>
+                        </template>
+                        <a href="#" @click.prevent="openModal('ROSTER', {team: oppTeam})">Roster</a>
                     </div>
                 </div>
             </div>
-            <div v-show="hiddenCoachCount > 0"><a href="#" class="muted" @click.prevent="openModal('SETTINGS', {})">+{{ hiddenCoachCount }} total hidden coaches</a></div>
         </div>
-    `,
+        <div v-show="hiddenCoachCount > 0"><a href="#" class="muted" @click.prevent="openModal('SETTINGS', {})">+{{ hiddenCoachCount }} total hidden coaches</a></div>
+    </div>  
+</template>
+
+<script lang="ts">
+import Vue from "vue";
+import Component from 'vue-class-component';
+import { Util } from '../../../core/util';
+import GameFinderHelpers from '../include/GameFinderHelpers';
+import IBackendApi from "../include/IBackendApi";
+
+@Component({
     props: {
+        isDevMode: {
+            type: Boolean,
+            required: true
+        },
         coachName: {
             type: String,
             required: true
@@ -100,6 +106,7 @@ import GameFinderHelpers from '../include/GameFinderHelpers';
     }
 })
 export default class OpponentsComponent extends Vue {
+    private backendApi: IBackendApi | null = null;
     private uiUpdatesPaused: boolean = false;
 
     public opponents:any = {};
@@ -113,6 +120,8 @@ export default class OpponentsComponent extends Vue {
     public fadeOutId: string | null = null;
 
     async mounted() {
+        this.backendApi = GameFinderHelpers.getBackendApi(this.$props.isDevMode);
+
         await this.getOpponents();
 
         setInterval(this.processOpponents, 100);
@@ -124,9 +133,7 @@ export default class OpponentsComponent extends Vue {
     }
 
     private async getOpponents() {
-        const result = await Axios.post('/api/gamefinder/teams')
-
-        const data = result.data;
+        const data = await this.backendApi.teamsAsOpponents();
 
         Util.applyDeepDefaults(data, [{
             visibleTeams: 0,
@@ -288,7 +295,7 @@ export default class OpponentsComponent extends Vue {
                 visibleOpponent.expanded = true;
             }
         } else {
-             this.expandedForAllOpponents = Array.from(this.$props.opponentMap.values()).map((o:any) => o.id);
+            this.expandedForAllOpponents = Array.from(this.$props.opponentMap.values()).map((o:any) => o.id);
         }
     }
 
@@ -298,7 +305,7 @@ export default class OpponentsComponent extends Vue {
                 visibleOpponent.expanded = false;
             }
         } else {
-             this.expandedForAllOpponents = [];
+            this.expandedForAllOpponents = [];
         }
     }
 
@@ -311,7 +318,7 @@ export default class OpponentsComponent extends Vue {
     }
 
     public async sendOffer(team) {
-        await Axios.post('/api/gamefinder/offer/' + this.$props.selectedOwnTeam.id + '/' + team.id);
+        await this.backendApi.sendOffer(this.$props.selectedOwnTeam.id, team.id);
         this.recentOffers.push({myTeamId: this.$props.selectedOwnTeam.id, opponentTeamId: team.id, offerDate: Date.now()});
     }
 
@@ -390,3 +397,4 @@ export default class OpponentsComponent extends Vue {
         return GameFinderHelpers.getTeamLogoUrl(team);
     }
 }
+</script>
