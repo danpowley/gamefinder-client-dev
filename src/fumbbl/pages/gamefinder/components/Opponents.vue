@@ -24,29 +24,46 @@
                 <span v-show="! isExpanded(opponent)"><a href="#" class="hidecoach" @click.prevent="hideCoach(opponent.id, opponent.name)">hide</a></span>
             </div>
             <div v-show="isExpanded(opponent)">
-                <div v-for="oppTeam in opponent.teams" v-if="oppTeam.visible" :key="oppTeam.id" class="team" :class="{fadeout: fadeOutId === 'team' + oppTeam.id}">
+                <div v-for="oppTeam in opponent.teams" v-if="oppTeam.visible" :key="oppTeam.id" class="team" :class="{wholeteamclickable: ! isOwnTeamSelected, fadeout: fadeOutId === 'team' + oppTeam.id}" @click.prevent="() => {! isOwnTeamSelected ? openModal('ROSTER', {team: oppTeam}): null;}">
                     <div class="logo">
                         <img :src="getTeamLogoUrl(oppTeam)" />
                     </div>
                     <div class="details">
-                        <div class="name">{{ abbreviate(oppTeam.name, 55) }}</div>
+                        <div class="name">
+                            <span :class="{nameoffhover: isOwnTeamSelected}">{{ abbreviate(oppTeam.name, 55) }}</span>
+                            <a v-if="isOwnTeamSelected" class="nameonhover" href="#" @click.prevent="openModal('ROSTER', {team: oppTeam})">{{ abbreviate(oppTeam.name, 55) }}</a>
+                        </div>
                         <div class="info">
                             <span v-show="isOfferedBySelectedOwnTeam(oppTeam)" class="offeredtag">Offered</span>
                             <!-- @christer, I've made up some values here oppTeam.currentSeason and oppTeam.gamesPlayedInSeason -->
-                            <span title="Seasons and games played">S{{ oppTeam.currentSeason }}:G{{ oppTeam.gamesPlayedInSeason }}</span> TV {{ oppTeam.teamValue / 1000 }}k {{ oppTeam.race }}
+                            <span title="Seasons and games played">S{{ oppTeam.currentSeason }}:G{{ oppTeam.gamesPlayedInSeason }}</span> {{ oppTeam.teamValue / 1000 }}k {{ oppTeam.race }}
                         </div>
                     </div>
                     <div class="links">
-                        <template v-if="isOwnTeamSelected">
-                            <template v-if="isOfferedBySelectedOwnTeam(oppTeam)">
-                                <span>Offered</span>
+                        <div>
+                            <template v-if="isOwnTeamSelected">
+                                <template v-if="isOfferedBySelectedOwnTeam(oppTeam)">
+                                    <span>Offered / </span>
+                                </template>
+                                <template v-else>
+                                    <a href="#" @click.prevent="sendOffer(oppTeam)">Send Offer</a> / 
+                                </template>
+                                <a href="#" @click.prevent="hideMatch(oppTeam.id)">Hide Match</a>
                             </template>
-                            <template v-else>
-                                <a href="#" @click.prevent="sendOffer(oppTeam)">Offer</a>
-                            </template>
-                            <a href="#" @click.prevent="hideMatch(oppTeam.id)">Hide</a>
-                        </template>
-                        <a href="#" @click.prevent="openModal('ROSTER', {team: oppTeam})">Roster</a>
+                        </div>
+                    </div>
+                    <div v-if="isOwnTeamSelected" class="selectedownteam">
+                        <div class="details">
+                            <div class="name">
+                                {{ abbreviate(selectedOwnTeam.name, 20) }}
+                            </div>
+                            <div class="info">
+                                {{ selectedOwnTeam.race }} {{ selectedOwnTeam.teamValue / 1000 }}k
+                            </div>
+                        </div>
+                        <div class="logo">
+                            <img :src="getTeamLogoUrl(selectedOwnTeam)" />
+                        </div>
                     </div>
                 </div>
             </div>
