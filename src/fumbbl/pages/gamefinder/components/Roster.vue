@@ -9,15 +9,18 @@
                     </div>
                     <div class="details">
                         <div class="name">
-                            {{ abbreviate(rosterData.name, 60) }}
+                            <!-- @christer absolute url used multiple times -->
+                            <a :href="'https://fumbbl.com/p/team?team_id=' + rosterData.id" target="_blank" :title="rosterData.name">{{ abbreviate(rosterData.name, 30) }}</a> (<a :href="'https://fumbbl.com/~' + rosterData.coach" target="_blank" :title="rosterData.coach">{{ abbreviate(rosterData.coach, 10) }}</a>)
                         </div>
                         <div class="info">
-                            TV {{ rosterData.teamValue/1000 }}k, {{ rosterData.race }}, {{ rosterData.rerolls }} RR, {{rosterData.fanFactor}} DF, {{ rosterData.treasury/1000 }}k gold
+                            <!-- @christer new properties used that won't exist yet in main API (currentSeason, gamesPlayedInSeason) -->
+                            <span title="Team Value">{{ rosterData.teamValue/1000 }}k</span> {{ rosterData.race }}, <span title="Number of rerolls">{{ rosterData.rerolls }} RR</span>, <span title="Dedicated fans.">{{rosterData.fanFactor}} DF</span>, <span title="Treasury available">{{ rosterData.treasury/1000 }}k gold</span>, <span title="Seasons and games played.">S{{ rosterData.currentSeason }}:G{{ rosterData.gamesPlayedInSeason }}</span>, <span title="Team record: win/tie/loss">{{ rosterData.record.wins }}/{{ rosterData.record.ties }}/{{ rosterData.record.losses }}</span>
                         </div>
                     </div>
                 </div>
                 <table cellspacing="0" cellpadding="0" width="100%">
                     <tr v-for="player in rosterData.players" :key="player.id">
+                        <!-- @christer absolute url used -->
                         <td style="width: 34px; height: 34px; background: rgba(0, 0, 0, 0) url('http://fumbbl.com/i/585610') repeat scroll 0px -68px;"></td>
                         <td class="position">{{ player.position }}</td>
                         <td class="injuries">{{ player.injuries }}</td>
