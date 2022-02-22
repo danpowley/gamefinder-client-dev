@@ -36,6 +36,7 @@
             <selectedownteam
                 v-show="display === 'LFG'"
                 :team="selectedOwnTeam"
+                :teamSettingsEnabled="featureFlags.teamSettings"
                 @deselect-team="deselectTeam"
                 @open-modal="openModal"></selectedownteam>
 
@@ -66,7 +67,7 @@
             @unhide-coach="handleUnhideCoach"
             @close-modal="closeModal"></settings>
 
-        <teamsettings :team="modalTeamSettingsTeam" @close-modal="closeModal"></teamsettings>
+        <teamsettings v-if="featureFlags.teamSettings" :team="modalTeamSettingsTeam" @close-modal="closeModal"></teamsettings>
     </div>
 </template>
 
@@ -106,7 +107,7 @@ export default class GameFinder extends Vue {
 
     public coachName: string | null = null;
     public display: 'LFG' | 'TEAMS' | 'NONE' = 'LFG';
-    public featureFlags = {blackbox: true};
+    public featureFlags = {blackbox: true, teamSettings: false};
 
     public selectedOwnTeam:any = null;
     public me:any = { teams: [] };
