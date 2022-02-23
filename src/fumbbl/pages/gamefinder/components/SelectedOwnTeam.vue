@@ -18,7 +18,7 @@
         </template>
         <template v-else>
             <div>
-                <strong>No team selected.</strong> To make an offer, select one of your teams above and the list of opponents will be filtered to match that team.
+                <strong>No team selected.</strong> Click a team above to filter opponents to match that team. When no team is selected, all opponents on Gamefinder are listed below, click on an opponent team to see their details and send offers.
             </div>
         </template>
     </div>
