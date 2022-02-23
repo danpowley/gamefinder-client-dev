@@ -68,7 +68,7 @@
                 </div>
             </div>
         </div>
-        <div v-show="hiddenCoachCount > 0"><a href="#" class="muted" @click.prevent="openModal('SETTINGS', {})">+{{ hiddenCoachCount }} total hidden coaches</a></div>
+        <div v-show="hiddenCoachCount > 0" class="hiddencoachcount"><a href="#" class="muted" @click.prevent="openModal('SETTINGS', {})">+{{ hiddenCoachCount }} total hidden coaches</a></div>
     </div>  
 </template>
 

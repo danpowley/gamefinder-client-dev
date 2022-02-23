@@ -11,7 +11,7 @@
             <div class="teamextras">
                 <div class="divisionleagueinfo">{{ team.division }}</div>
                 <div class="teamlinks">
-                    <a href="#" @click.prevent="openModal('TEAM_SETTINGS', {team: team})">Settings</a>
+                    <a v-show="teamSettingsEnabled" href="#" @click.prevent="openModal('TEAM_SETTINGS', {team: team})">Settings</a>
                     <a href="#" @click.prevent="deselectTeam">Deselect</a>
                 </div>
             </div>
@@ -36,6 +36,10 @@ import GameFinderHelpers from '../include/GameFinderHelpers';
             validator: function (team) {
                 return typeof team === 'object' || team === null;
             }
+        },
+        teamSettingsEnabled: {
+            type: Boolean,
+            required: true
         }
     }
 })
