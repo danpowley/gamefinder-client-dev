@@ -152,7 +152,10 @@ export default class RosterComponent extends Vue {
         return data.roster;
     }
 
-    public sendOffer(myTeam) {
+    public sendOffer(myTeam): void {
+        if (this.recentOffersSent.includes(myTeam.id)) {
+            return;
+        }
         this.backendApi.sendOffer(myTeam.id, this.$props.settings.displayTeam.id);
         this.recentOffersSent.push(myTeam.id);
     }
