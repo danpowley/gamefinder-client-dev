@@ -406,7 +406,7 @@ export default class OpponentsComponent extends Vue {
         this.$emit('open-modal', name, modalSettings);
     }
 
-    public abbreviate(stringValue: string, maxCharacters: number) {
+    public abbreviate(stringValue: string, maxCharacters: number): string {
         return Util.abbreviate(stringValue, maxCharacters);
     }
 

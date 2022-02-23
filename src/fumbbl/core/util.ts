@@ -41,7 +41,7 @@ export class Util {
       return (this.treatAsUTC(endDate) - this.treatAsUTC(startDate)) / millisecondsPerDay;
   }
 
-  public static abbreviate(stringValue: string, maxCharacters: number) {
+  public static abbreviate(stringValue: string, maxCharacters: number): string {
       if (stringValue.length <= maxCharacters) {
           return stringValue;
       }
