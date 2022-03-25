@@ -93,20 +93,22 @@ export default class OffersComponent extends Vue {
 
     private async getOffers() {
         const pre = Date.now();
-        const offers = await this.backendApi.getOffers(this.$props.coachName);
+        const offers = await this.backendApi.getOffers();
         const now = Date.now();
 
         const avgTime = now / 2 + pre / 2;
 
         for (const offer of offers) {
             offer.expiry = avgTime + offer.timeRemaining;
-            offer.external = offer.team1.coach.name !== this.$props.coachName
+            offer.external = offer.awaitingResponse === true && offer.showDialog === false;
+
             // Swap teams if the first team is the opponent's
-            if (offer.team2.coach.name === this.$props.coachName) {
+            if (offer.team2.coach === this.$props.coachName) {
                 const x = offer.team1;
                 offer.team1 = offer.team2;
                 offer.team2 = x;
             }
+
             this.createOffer(offer);
         }
     }
@@ -212,14 +214,14 @@ export default class OffersComponent extends Vue {
             home: {
                 id: offerData.team1.id,
                 team: offerData.team1.name,
-                race: offerData.team1.race.name,
+                race: offerData.team1.race,
                 tv: (offerData.team1.teamValue / 1000) + 'k',
                 coach: offerData.team1.coach
             },
             away: {
                 id: offerData.team2.id,
                 team: offerData.team2.name,
-                race: offerData.team2.race.name,
+                race: offerData.team2.race,
                 tv: (offerData.team2.teamValue / 1000) + 'k',
                 coach: offerData.team2.coach
             }
@@ -250,7 +252,8 @@ export default class OffersComponent extends Vue {
             this.applyFade(
                 () => {
                     this.cancelledOfferIds.push(offer.id);
-                    this.$emit('hide-match', myTeam, offer.away.id)
+                    this.$emit('hide-match', myTeam, offer.away.id);
+                    this.backendApi.cancelOffer(offer.home.id, offer.away.id);
                 },
                 offer.id,
                 500
@@ -263,7 +266,7 @@ export default class OffersComponent extends Vue {
                     if (index !== -1) {
                         this.$props.offers.splice(index, 1);
                     }
-                    this.backendApi.cancelOffer(offer.id)
+                    this.backendApi.cancelOffer(offer.home.id, offer.away.id);
                 },
                 offer.id,
                 500

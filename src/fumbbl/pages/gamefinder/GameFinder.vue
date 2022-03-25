@@ -132,7 +132,6 @@ export default class GameFinder extends Vue {
         this.coachName = appElement.getAttribute("coach");
         this.isDevMode = appElement.hasAttribute("dev-mode-on");
         this.backendApi = GameFinderHelpers.getBackendApi(this.isDevMode);
-        await this.backendApi.addCheatingCoach(this.coachName);
     }
 
     async mounted() {
@@ -144,8 +143,8 @@ export default class GameFinder extends Vue {
     }
 
     public async activate() {
-        this.backendApi.activate();
-        const teams = await this.backendApi.activeTeams(this.coachName);
+        await this.backendApi.activate();
+        const teams = await this.backendApi.activeTeams();
         const activeTeams = teams;
 
         Util.applyDeepDefaults(activeTeams, [{

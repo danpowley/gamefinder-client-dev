@@ -11,13 +11,8 @@ export default class GameFinderHelpers {
         }
     }
 
-    public static getTeamLogoId(team: any, size: number = 32): number | false {
-        for (let l of team.raceLogos) {
-            if (l.size === size) {
-                return l.logo;
-            }
-        }
-        return false;
+    public static getTeamLogoId(team: any): number {
+        return team.roster.logoImageIds.logo32;
     }
 
     public static getTeamLogoUrl(team: any): string {
