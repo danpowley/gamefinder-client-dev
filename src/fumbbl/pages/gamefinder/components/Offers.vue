@@ -6,20 +6,26 @@
             <div id="offerlist">
                 <div v-for="offer in offers" :key="offer.id" class="matchoffer" :class="{fadeout: fadeOutId === offer.id}">
                     <div class="icon external" v-show="offer.external">?</div>
-                    <div class="icon accept" v-show="offer.external">&#x2714;</div>
+                    <div class="icon accept" v-show="offer.external" @click.prevent="acceptOffer(offer)">&#x2714;</div>
                     <div class="icon cancel" @click.prevent="cancelOffer(offer)">&#x2718;</div>
                     <div class="offeredteam home">
                         <div class="name">
                             {{ abbreviate(offer.home.team, 30) }}
                         </div>
+                        <div class="coach">
+                            {{ offer.home.coach.name }} ({{ offer.home.coach.rating }})
+                        </div>
                         <div class="desc">
-                            TV {{ offer.home.tv }} {{ offer.home.race }}
+                            TV {{ offer.home.tv }} {{ offer.home.roster.name }}
                         </div>
                     </div>
                     <div class="timer" :style="{ width: (100 * offer.timeRemaining / offer.lifetime) + '%', left: (50 - 50 * offer.timeRemaining / offer.lifetime) + '%'}"></div>
                     <div class="offeredteam away">
                         <div class="desc">
-                            {{ offer.away.race }} TV {{ offer.away.tv }}
+                            {{ offer.away.roster.name }} TV {{ offer.away.tv }}
+                        </div>
+                        <div class="coach">
+                            {{ offer.away.coach.name }} ({{ offer.away.coach.rating }})
                         </div>
                         <div class="name">
                             {{ abbreviate(offer.away.team, 30) }}
@@ -98,19 +104,33 @@ export default class OffersComponent extends Vue {
 
         const avgTime = now / 2 + pre / 2;
 
+        let startDialogOffer = null;
+        let launchGameOffer = null;
+
         for (const offer of offers) {
             offer.expiry = avgTime + offer.timeRemaining;
             offer.external = offer.awaitingResponse === true && offer.showDialog === false;
 
             // Swap teams if the first team is the opponent's
-            if (offer.team2.coach === this.$props.coachName) {
+            if (offer.team2.coach.name === this.$props.coachName) {
                 const x = offer.team1;
                 offer.team1 = offer.team2;
                 offer.team2 = x;
             }
 
-            this.createOffer(offer);
+            const offerCreated = this.createOffer(offer);
+
+            if (offer.showDialog === true) {
+                startDialogOffer = offerCreated;
+            }
+
+            if (offer.launchGame === true) {
+                launchGameOffer = offerCreated;
+            }
         }
+
+        this.$emit('show-dialog', startDialogOffer);
+        this.$emit('launch-game', launchGameOffer);
     }
 
     private processOffers() {
@@ -214,22 +234,24 @@ export default class OffersComponent extends Vue {
             home: {
                 id: offerData.team1.id,
                 team: offerData.team1.name,
-                race: offerData.team1.race,
+                coach: offerData.team1.coach,
+                roster: offerData.team1.roster,
                 tv: (offerData.team1.teamValue / 1000) + 'k',
-                coach: offerData.team1.coach
             },
             away: {
                 id: offerData.team2.id,
                 team: offerData.team2.name,
-                race: offerData.team2.race,
+                coach: offerData.team2.coach,
+                roster: offerData.team2.roster,
                 tv: (offerData.team2.teamValue / 1000) + 'k',
-                coach: offerData.team2.coach
             }
         };
 
         if (this.isOfferValid(Date.now(), offer)) {
             this.pendingOffers.unshift(offer);
         }
+
+        return offer;
     }
 
     private getMyTeam(myTeamId: number): any {
@@ -253,7 +275,6 @@ export default class OffersComponent extends Vue {
                 () => {
                     this.cancelledOfferIds.push(offer.id);
                     this.$emit('hide-match', myTeam, offer.away.id);
-                    this.backendApi.cancelOffer(offer.home.id, offer.away.id);
                 },
                 offer.id,
                 500
@@ -272,6 +293,10 @@ export default class OffersComponent extends Vue {
                 500
             );
         }
+    }
+
+    public acceptOffer(offer: any): void {
+        this.backendApi.sendOffer(offer.home.id, offer.away.id);
     }
 
     private applyFade(workload: Function, offerId: number, waitTime: number) {

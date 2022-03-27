@@ -11,12 +11,12 @@ export default class GameFinderHelpers {
         }
     }
 
-    public static getTeamLogoId(team: any): number {
-        return team.roster.logoImageIds.logo32;
+    private static getTeamLogoId(team: any, small: boolean = true): number {
+        return small ? team.roster.logoImageIds.logo32 : team.roster.logoImageIds.logo64;
     }
 
-    public static getTeamLogoUrl(team: any): string {
-        const teamLogoId = this.getTeamLogoId(team);
+    public static getTeamLogoUrl(team: any, small: boolean = true): string {
+        const teamLogoId = this.getTeamLogoId(team, small);
         // @christer using absolute url here, as I don't have the icons locally.
         return 'https://fumbbl.com/i/' + teamLogoId;
     }
