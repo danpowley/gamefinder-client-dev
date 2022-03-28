@@ -10,7 +10,7 @@
                 </div>
                 <div class="teaminfo">
                     <div class="divisionletter">[{{ myTeam.division.charAt(0) }}] <span class="newopponentsicon" v-show="myTeam.hasUnreadItems">&#9679</span></div>
-                    <div class="teamvalue">{{ (myTeam.teamValue/1000)+2000 }}k</div>
+                    <div class="teamvalue">{{ (myTeam.teamValue/1000) }}k</div>
                 </div>
             </div>
         </div>
