@@ -3,9 +3,7 @@
         <div class="teamsettingsinner">
             <a href="#" class="closemodal" @click.prevent="close">&times;</a>
             <div class="settingstitle">
-                <div class="settingstitletext">
-                    Settings for: {{ team.name }}
-                </div>
+                Settings for: {{ team.name }}
             </div>
             <div class="settingssection">
                 <div class="title"><strong>Allowed CTV Range:</strong></div>
