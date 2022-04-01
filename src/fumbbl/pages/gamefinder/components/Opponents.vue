@@ -100,10 +100,6 @@ import IBackendApi from "../include/IBackendApi";
             type: Map,
             required: true
         },
-        opponentsRefreshRequired: {
-            type: Boolean,
-            required: true
-        },
         selectedOwnTeam: {
             validator: function (team) {
                 return typeof team === 'object' || team === null;
@@ -119,14 +115,6 @@ import IBackendApi from "../include/IBackendApi";
         }
     },
     watch: {
-        // allow parent to trigger an opponents refresh (e.g. after changing teams that are LFG)
-        opponentsRefreshRequired: function () {
-            if (this.$props.opponentsRefreshRequired) {
-                // @ts-ignore: Property 'getOpponents' does not exist on type 'Vue'
-                this.getOpponents();
-                this.$emit('opponents-refreshed');
-            }
-        },
         matchesAndTeamsStateLastUpdated: function () {
             // @ts-ignore: Property 'getOpponentsFromMatchesAndTeamsState' does not exist on type 'Vue'.
             return this.getOpponentsFromMatchesAndTeamsState();
@@ -169,6 +157,7 @@ export default class OpponentsComponent extends Vue {
             }]
         }], this.$set);
 
+        // Remove logged in coach
         for(let i = data.length - 1; i >= 0; i--) {
             if (data[i].name === this.$props.coachName) {
                 data.splice(i, 1);

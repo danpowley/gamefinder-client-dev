@@ -3,8 +3,6 @@ export default interface IBackendApi {
 
     getState(): Promise<any>;
 
-    activeTeams(): Promise<any[]>;
-
     allTeams(coachName: string): Promise<any[]>;
 
     rosterData(teamId: number): Promise<any>;
