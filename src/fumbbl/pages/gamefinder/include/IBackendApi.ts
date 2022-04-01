@@ -19,8 +19,6 @@ export default interface IBackendApi {
 
     removeTeam(id: number): void;
 
-    getOffers(): Promise<any[]>;
-
     sendOffer(myTeamId: number, opponentTeamId: number): Promise<void>;
 
     cancelOffer(myTeamId: number, opponentTeamId: number): void;

@@ -47,11 +47,6 @@ export default class FumbblApi implements IBackendApi {
         Axios.post('/api/gamefinder/removeteam/' + id);
     }
 
-    public async getOffers(): Promise<any[]> {
-        const result = await Axios.post('/api/gamefinder/getoffers');
-        return result.data;
-    }
-
     public async sendOffer(myTeamId: number, opponentTeamId: number): Promise<void> {
         await Axios.post('/api/gamefinder/offer/' + myTeamId + '/' + opponentTeamId);
     }

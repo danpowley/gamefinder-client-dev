@@ -79,6 +79,8 @@
 
                 <offers
                     :is-dev-mode="isDevMode"
+                    :matches="matches"
+                    :matchesLastUpdated="matchesLastUpdated"
                     :offers="offers"
                     :coach-name="coachName"
                     :my-teams="me.teams"
@@ -175,6 +177,8 @@ export default class GameFinder extends Vue {
 
     // the offers property is primarily managed by the OffersComponent, they're held here and passed to OffersComponent as a prop
     public offers:any = [];
+    public matches: any[] = [];
+    public matchesLastUpdated: number = 0;
 
     public blackboxData: {available: number, chosen: number} = {available: 0, chosen: 0};
 
@@ -196,7 +200,17 @@ export default class GameFinder extends Vue {
 
         this.refresh();
 
-        document.addEventListener('click', this.onOuterModalClick)
+        document.addEventListener('click', this.onOuterModalClick);
+
+        await this.getState();
+        setInterval(this.getState, 1000);
+    }
+
+    public async getState()
+    {
+        const gamefinderState = await this.backendApi.getState();
+        this.matches = gamefinderState.matches;
+        this.matchesLastUpdated = Date.now();
     }
 
     public async activate() {
