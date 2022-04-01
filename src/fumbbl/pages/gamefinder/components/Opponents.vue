@@ -88,6 +88,14 @@ import IBackendApi from "../include/IBackendApi";
             type: String,
             required: true
         },
+        matchesAndTeamsState: {
+            type: Object,
+            required: true
+        },
+        matchesAndTeamsStateLastUpdated: {
+            type: Number,
+            required: true
+        },
         opponentMap: {
             type: Map,
             required: true
@@ -118,6 +126,10 @@ import IBackendApi from "../include/IBackendApi";
                 this.getOpponents();
                 this.$emit('opponents-refreshed');
             }
+        },
+        matchesAndTeamsStateLastUpdated: function () {
+            // @ts-ignore: Property 'getOpponentsFromMatchesAndTeamsState' does not exist on type 'Vue'.
+            return this.getOpponentsFromMatchesAndTeamsState();
         }
     }
 })
@@ -137,19 +149,15 @@ export default class OpponentsComponent extends Vue {
 
     async mounted() {
         this.backendApi = GameFinderHelpers.getBackendApi(this.$props.isDevMode);
-
-        await this.getOpponents();
-
         setInterval(this.processOpponents, 100);
-        setInterval(this.getOpponents, 5000);
     }
 
     private get isOwnTeamSelected(): boolean {
         return this.$props.selectedOwnTeam !== null;
     }
 
-    private async getOpponents() {
-        const data = await this.backendApi.teamsAsOpponents();
+    private async getOpponentsFromMatchesAndTeamsState() {
+        const data = this.$props.matchesAndTeamsState.teams;
 
         Util.applyDeepDefaults(data, [{
             visibleTeams: 0,
