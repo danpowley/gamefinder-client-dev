@@ -1,6 +1,8 @@
 export default interface IBackendApi {
     activate(): Promise<void>;
 
+    getState(): Promise<any>;
+
     activeTeams(): Promise<any[]>;
 
     allTeams(coachName: string): Promise<any[]>;

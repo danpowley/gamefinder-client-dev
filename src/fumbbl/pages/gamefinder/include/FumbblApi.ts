@@ -3,8 +3,13 @@ import IBackendApi from "./IBackendApi"
 
 export default class FumbblApi implements IBackendApi {
     public async activate(): Promise<void> {
-        await Axios.post('/api/gamefinder/activate')
-    };
+        await Axios.post('/api/gamefinder/activate');
+    }
+
+    public async getState(): Promise<any> {
+        const result = await Axios.post('/api/gamefinder/state');
+        return result.data;
+    }
 
     public async activeTeams(): Promise<any[]> {
         const result = await Axios.post('/api/gamefinder/coachteams');

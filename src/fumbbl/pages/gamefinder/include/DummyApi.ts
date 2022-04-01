@@ -9,8 +9,13 @@ export default class DummyApi implements IBackendApi {
     }
 
     public async activate(): Promise<void> {
-        await Axios.post(this.getFullApiEndPointUrl('/api/gamefinder/activate'))
-    };
+        await Axios.post(this.getFullApiEndPointUrl('/api/gamefinder/activate'));
+    }
+
+    public async getState(): Promise<any> {
+        const result = await Axios.post(this.getFullApiEndPointUrl('/api/gamefinder/state'));
+        return result.data;
+    }
 
     public async activeTeams(): Promise<any[]> {
         const result = await Axios.post(this.getFullApiEndPointUrl('/api/gamefinder/coachteams'));
