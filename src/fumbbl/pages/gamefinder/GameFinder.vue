@@ -212,7 +212,7 @@ export default class GameFinder extends Vue {
     {
         const matchesAndTeamsState = await this.backendApi.getState();
         this.refreshMyTeams(matchesAndTeamsState);
-        this.refreshOpponentVisibility();
+        this.refresh();
         this.matchesAndTeamsState = matchesAndTeamsState;
         this.matchesAndTeamsStateLastUpdated = Date.now();
     }
