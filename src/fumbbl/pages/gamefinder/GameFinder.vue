@@ -425,11 +425,23 @@ export default class GameFinder extends Vue {
     }
 
     public handleHideMatch(myTeamId: number, opponentTeamId: number): void {
-        this.removeOfferFromOffers(myTeamId, opponentTeamId);
+        this.removeAllowedUiOnly(myTeamId, opponentTeamId);
+        this.removeOfferUiOnly(myTeamId, opponentTeamId);
         this.backendApi.cancelOffer(myTeamId, opponentTeamId);
     }
 
-    private removeOfferFromOffers(myTeamId: number, opponentTeamId: number): void
+    private removeAllowedUiOnly(myTeamId: number, opponentTeamId: number): void {
+        for (const myTeam of this.me.teams) {
+            if (myTeam.id === myTeamId) {
+                const index = myTeam.allow.findIndex((teamId) => teamId === opponentTeamId);
+                if (index !== -1) {
+                    myTeam.allow.splice(index, 1);
+                }
+            }
+        }
+    }
+
+    private removeOfferUiOnly(myTeamId: number, opponentTeamId: number): void
     {
         const index = this.offers.findIndex((o) => o.home.id === myTeamId && o.away.id === opponentTeamId);
         if (index !== -1) {
