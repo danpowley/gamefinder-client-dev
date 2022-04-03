@@ -165,7 +165,7 @@ export default class GameFinder extends Vue {
     private backendApi: IBackendApi;
 
     public coachName: string | null = null;
-    public display: 'LFG' | 'TEAMS' | 'NONE' = 'LFG';
+    public display: 'LFG' | 'TEAMS' = 'LFG';
     public featureFlags = {blackbox: false, teamSettings: false};
 
     public startDialogOffer:any = null;
@@ -271,8 +271,6 @@ export default class GameFinder extends Vue {
     }
 
     public async showLfg() {
-        this.display = 'NONE';
-
         await this.backendApi.activate();
 
         // always select if only 1 team
@@ -283,7 +281,7 @@ export default class GameFinder extends Vue {
 
         this.refresh();
 
-        this.display = 'LFG';
+        setTimeout(() => this.display = 'LFG', 3000);
     }
 
     public async showTeams() {
