@@ -340,7 +340,7 @@ export default class OpponentsComponent extends Vue {
 
     private hasRecentOffer(teamId) {
         for (const recentOfferDetails of this.recentOffers) {
-            if (recentOfferDetails.offerDate > Date.now() - 5) {
+            if (recentOfferDetails.offerDate > Date.now() - 3000) {
                 if (recentOfferDetails.myTeamId === this.$props.selectedOwnTeam.id && recentOfferDetails.opponentTeamId === teamId) {
                     return true;
                 }
