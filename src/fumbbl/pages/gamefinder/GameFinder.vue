@@ -1,5 +1,10 @@
 <template>
     <div id="gamefinder">
+        <div class="getstateerrorbanner" v-show="stateUpdateErrorMessage">
+            Gamefinder encountered an error whilst getting the latest game data, if this issue continues, please reload the page.
+            <div>{{ stateUpdateErrorMessage }}</div>
+        </div>
+
         <!-- We use v-if here because we want the component to be mounted each time display changes and force a reload of team data -->
         <lfgteams
             v-if="display === 'TEAMS'"
@@ -176,6 +181,7 @@ export default class GameFinder extends Vue {
 
     public secondsBetweenGetStateCalls: number = 1;
     public stateUpdatesArePaused: boolean = false;
+    public stateUpdateErrorMessage: string | null = null;
 
     public startDialogOffer:any = null;
     public launchGameOffer:any = null;
@@ -224,7 +230,14 @@ export default class GameFinder extends Vue {
                 this.stateUpdatesArePaused = true;
                 return;
             }
-            await this.getState();
+
+            try {
+                await this.getState();
+                this.stateUpdateErrorMessage = null;
+            } catch (error) {
+                this.stateUpdateErrorMessage = (error as Error).name + ': ' + (error as Error).message;
+            }
+
             setTimeout(getStateWithSetTimeout, this.secondsBetweenGetStateCalls*1000);
         };
 
