@@ -34,6 +34,10 @@
                 </div>
             </div>
         </div>
+        <audio id="audionewexternaloffer">
+            <source src="https://fumbbl.com/FUMBBL/sound/ping.mp3" type="audio/mpeg">
+            <source src="https://fumbbl.com/FUMBBL/sound/ping.ogg" type="audio/ogg">
+        </audio>
     </div>
 </template>
 
@@ -165,6 +169,9 @@ export default class OffersComponent extends Vue {
                 }
 
                 if (!processed) {
+                    if (newOffer.external) {
+                        this.playSound('audionewexternaloffer');
+                    }
                     this.$props.offers.unshift(newOffer);
                 }
             }
@@ -296,6 +303,10 @@ export default class OffersComponent extends Vue {
 
     public setUiUpdatesPaused(isPaused: boolean) {
         this.uiUpdatesPaused = isPaused;
+    }
+
+    private playSound(audioElementId) {
+        document.getElementById(audioElementId).play();
     }
 }
 </script>
