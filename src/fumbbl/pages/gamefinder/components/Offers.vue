@@ -311,7 +311,8 @@ export default class OffersComponent extends Vue {
 
     private playSound(audioElementId) {
         if (this.$props.audioEnabled) {
-            document.getElementById(audioElementId).play();
+            const audioElement = document.getElementById(audioElementId);
+            (audioElement as HTMLAudioElement).play();
         }
     }
 }
