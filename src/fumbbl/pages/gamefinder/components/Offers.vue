@@ -76,6 +76,10 @@ import GameFinderHelpers from "../include/GameFinderHelpers";
         hiddenCoaches: {
             type: Array,
             required: true
+        },
+        audioEnabled: {
+            type: Boolean,
+            required: true
         }
     },
     watch: {
@@ -306,7 +310,9 @@ export default class OffersComponent extends Vue {
     }
 
     private playSound(audioElementId) {
-        document.getElementById(audioElementId).play();
+        if (this.$props.audioEnabled) {
+            document.getElementById(audioElementId).play();
+        }
     }
 }
 </script>
