@@ -5,8 +5,8 @@
             <div class="lfgList">
                 <template v-for="team in teams">
                     <div :key="team.id">
-                        <div v-if="allTeamHeadings && allTeamHeadings['team' + team.id].showDivisionHeader" class="divisionheader">{{ team.division }}</div>
-                        <div v-if="allTeamHeadings && allTeamHeadings['team' + team.id].showLeagueHeader" class="leagueheader">League teams for <strong>{{ team.league.name }}</strong></div>
+                        <div v-if="teamsShowDivisionLeagueHeader && teamsShowDivisionLeagueHeader['team' + team.id].showDivisionHeader" class="divisionheader">{{ team.division }}</div>
+                        <div v-if="teamsShowDivisionLeagueHeader && teamsShowDivisionLeagueHeader['team' + team.id].showLeagueHeader" class="leagueheader">League teams for <strong>{{ team.league.name }}</strong></div>
                         <div class="lfgteam">
                             <input class="teamcheck" type="checkbox" :value="team.id" v-model="checked" @change="toggleTeam">
                             <img :src="getTeamLogoUrl(team)" />
@@ -58,13 +58,12 @@ export default class LfgTeamsComponent extends Vue {
     public teams: any[] = [];
     public checked: boolean[] = [];
     public activateTeamsButtonClicked: boolean = false;
-    public allTeamHeadings: any | null = null;
+    public teamsShowDivisionLeagueHeader: any | null = null;
 
     async mounted() {
         this.backendApi = GameFinderHelpers.getBackendApi(this.$props.isDevMode);
         this.activateTeamsButtonClicked = false;
         await this.reloadTeams();
-        this.allTeamHeadings = this.teamHeadings();
     }
 
     public async showLfg() {
@@ -76,36 +75,12 @@ export default class LfgTeamsComponent extends Vue {
     private async reloadTeams() {
         const teams = await this.backendApi.allTeams(this.$props.coachName);
         teams.sort(GameFinderPolicies.sortTeamByDivisionNameLeagueNameTeamName);
+        this.teamsShowDivisionLeagueHeader = GameFinderHelpers.getTeamsShowDivisionLeagueHeader(teams);
         this.teams = teams;
 
         this.checked = teams.filter(GameFinderPolicies.teamIsLfg).map((team) => team.id);
 
         this.updateAllChecked();
-    }
-
-    private teamHeadings(): any {
-        let previousDivision = false;
-        let previousLeague = false;
-        const allTeamHeadings = {};
-        for (let team of this.teams) {
-            const teamHeadings = {
-                showDivisionHeader: false,
-                showLeagueHeader: false,
-            };
-
-            if (previousDivision !== team.division) {
-                previousDivision = team.division;
-                teamHeadings.showDivisionHeader = true;
-            }
-
-            if (team.division === 'League' && previousLeague !== team.league) {
-                previousLeague = team.league;
-                teamHeadings.showLeagueHeader = true;
-            }
-
-            allTeamHeadings['team' + team.id] = teamHeadings;
-        }
-        return allTeamHeadings;
     }
 
     private async updateBlackboxData() {
