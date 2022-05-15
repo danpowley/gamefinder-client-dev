@@ -29,7 +29,7 @@ export default interface IBackendApi {
 
     updateUserSetting(settingKey: string, settingValue: boolean | string | number): void;
 
-    hideCoach(coachName: string);
+    hideCoach(coachName: string): Promise<void>;
 
-    unhideCoach(coachName: string);
+    unhideCoach(coachName: string): Promise<void>;
 }

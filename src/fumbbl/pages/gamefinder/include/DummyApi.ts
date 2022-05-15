@@ -1,6 +1,6 @@
 import IBackendApi from "./IBackendApi";
 import Axios from "axios";
-import { UserSettings } from "./Interfaces";
+import { UserSettings, Coach } from "./Interfaces";
 
 export default class DummyApi implements IBackendApi {
     readonly dummyApiDomain = 'http://localhost:3000';
@@ -62,22 +62,34 @@ export default class DummyApi implements IBackendApi {
     };
 
     public async getUserSettings(): Promise<UserSettings> {
-        // backend not implemented
+        const hiddenCoachesResult = await Axios.get(this.getFullApiEndPointUrl('/api/coach/gethidden'));
+
+        // workaround for id being a string
+        const hiddenCoachesResultData: {id: string, name: string}[] = hiddenCoachesResult.data;
+        const hiddenCoaches: Coach[] = [];
+        for (const coachWithWrongType of hiddenCoachesResultData) {
+            hiddenCoaches.push({
+                id: ~~coachWithWrongType.id,
+                name: coachWithWrongType.name,
+                ranking: 'unknown',
+            });
+        }
+        // end of workaround for id being a string
+
         return {
             audio: true,
-            hiddenCoaches: [],
+            hiddenCoaches: hiddenCoaches,
         };
     }
 
-    public updateUserSetting(settingKey: string, settingValue: boolean | string | number): void {
-        // not implemented
+    public async updateUserSetting(settingKey: string, settingValue: boolean | string | number): Promise<void> {
     }
 
-    public hideCoach(coachName: string): void {
-        // not implemented
+    public async hideCoach(coachName: string): Promise<void> {
+        await Axios.post(this.getFullApiEndPointUrl('/api/coach/hide/' + coachName));
     }
 
-    public unhideCoach(coachName: string): void {
-        // not implemented
+    public async unhideCoach(coachName: string): Promise<void> {
+        await Axios.post(this.getFullApiEndPointUrl('/api/coach/unhide/' + coachName));
     }
 }

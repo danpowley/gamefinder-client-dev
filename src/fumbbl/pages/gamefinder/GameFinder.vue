@@ -484,19 +484,16 @@ export default class GameFinder extends Vue {
         }
     }
 
-    public handleHideCoach(coach: Coach): void {
-        this.userSettings.hiddenCoaches.push(coach);
+    public async handleHideCoach(coach: Coach): Promise<void> {
+        await this.backendApi.hideCoach(coach.name);
+        this.userSettings = await this.backendApi.getUserSettings();
         this.refreshOpponentVisibility();
-        this.backendApi.hideCoach(coach.name);
     }
 
-    public handleUnhideCoach(coach: Coach): void {
-        if (! this.isCoachHidden(coach.id)) {
-            return;
-        }
-        this.userSettings.hiddenCoaches.splice(this.getHiddenCoachIndex(coach.id), 1);
+    public async handleUnhideCoach(coach: Coach): Promise<void> {
+        await this.backendApi.unhideCoach(coach.name);
+        this.userSettings = await this.backendApi.getUserSettings();
         this.refreshOpponentVisibility();
-        this.backendApi.unhideCoach(coach.name);
     }
 
     public handleShowDialog(startDialogOffer: any | null): void {
