@@ -1,6 +1,6 @@
-import IBackendApi from "./IBackendApi";
 import Axios from "axios";
-import { UserSettings, Coach } from "./Interfaces";
+import IBackendApi from "./IBackendApi";
+import { Coach, GameFinderVar, UserSettings } from "./Interfaces";
 
 export default class DummyApi implements IBackendApi {
     readonly dummyApiDomain = 'http://localhost:3000';
@@ -76,13 +76,20 @@ export default class DummyApi implements IBackendApi {
         }
         // end of workaround for id being a string
 
+        const enableSoundVar: GameFinderVar = 'gamefinder.enableSound';
+        const enableSoundVarValue = await Axios.get(this.getFullApiEndPointUrl('/api/coach/getvar/' + enableSoundVar));
+
         return {
-            audio: true,
+            audio: enableSoundVarValue.data[enableSoundVar] === 'Yes',
             hiddenCoaches: hiddenCoaches,
         };
     }
 
-    public async updateUserSetting(settingKey: string, settingValue: boolean | string | number): Promise<void> {
+    public async setGameFinderVar(gameFinderVar: GameFinderVar, value: string): Promise<void> {
+        // IMPORTANT: this is posting to the proxy using a JSON body, real FUMBBL expects form data body
+        // Couldn't get form data body to work with the proxy server, so doing this instead.
+        // FumbblApi class uses a FormData object for the request body.
+        await Axios.post(this.getFullApiEndPointUrl('/api/coach/setvar/' + gameFinderVar), {value: value});
     }
 
     public async hideCoach(coachName: string): Promise<void> {

@@ -1,6 +1,7 @@
 import Axios from "axios";
+import FormData from 'form-data';
 import IBackendApi from "./IBackendApi"
-import { UserSettings, Coach } from "./Interfaces";
+import { Coach, GameFinderVar, UserSettings } from "./Interfaces";
 
 export default class FumbblApi implements IBackendApi {
     public async activate(): Promise<void> {
@@ -76,7 +77,15 @@ export default class FumbblApi implements IBackendApi {
         };
     }
 
-    public async updateUserSetting(settingKey: string, settingValue: boolean | string | number): Promise<void> {
+    public async setGameFinderVar(gameFinderVar: GameFinderVar, value: string): Promise<void> {
+        var bodyFormData = new FormData();
+        bodyFormData.append('value', value);
+        await Axios({
+            method: "post",
+            url: '/api/coach/setvar/' + gameFinderVar,
+            data: bodyFormData,
+            headers: { "Content-Type": `multipart/form-data; boundary=${bodyFormData._boundary}` },
+        });
     }
 
     public async hideCoach(coachName: string): Promise<void> {

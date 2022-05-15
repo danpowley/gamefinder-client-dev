@@ -128,9 +128,11 @@
             @close-modal="closeModal"></roster>
 
         <settings
+            :is-dev-mode="isDevMode"
             :is-open="modalSettingsShow"
             :user-settings="userSettings"
             @unhide-coach="handleUnhideCoach"
+            @user-settings-changed="handleUserSettingsChanged"
             @close-modal="closeModal"></settings>
 
         <teamsettings v-if="featureFlags.teamSettings" :team="modalTeamSettingsTeam" @close-modal="closeModal"></teamsettings>
@@ -494,6 +496,10 @@ export default class GameFinder extends Vue {
         await this.backendApi.unhideCoach(coach.name);
         this.userSettings = await this.backendApi.getUserSettings();
         this.refreshOpponentVisibility();
+    }
+
+    public async handleUserSettingsChanged() {
+        this.userSettings = await this.backendApi.getUserSettings();
     }
 
     public handleShowDialog(startDialogOffer: any | null): void {
