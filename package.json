@@ -8,7 +8,7 @@
     "less": "lessc src/assets/lfg2.less public/bundle.css"
   },
   "dependencies": {
-    "axios": "^0.25.0",
+    "axios": "^0.27.0",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^9.1.2"
