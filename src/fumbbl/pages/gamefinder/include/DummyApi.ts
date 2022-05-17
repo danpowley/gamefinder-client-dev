@@ -79,9 +79,13 @@ export default class DummyApi implements IBackendApi {
         const enableSoundVar: GameFinderVar = 'gamefinder.enableSound';
         const enableSoundVarValue = await Axios.get(this.getFullApiEndPointUrl('/api/coach/getvar/' + enableSoundVar));
 
+        const enableZenModeVar: GameFinderVar = 'gamefinder.zenMode';
+        const enableZenModeVarValue = await Axios.get(this.getFullApiEndPointUrl('/api/coach/getvar/' + enableZenModeVar));
+
         return {
             audio: enableSoundVarValue.data[enableSoundVar] === 'Yes',
             hiddenCoaches: hiddenCoaches,
+            zenMode: enableZenModeVarValue.data[enableZenModeVar] === 'Yes',
         };
     }
 

@@ -71,9 +71,16 @@ export default class FumbblApi implements IBackendApi {
         }
         // end of workaround for id being a string
 
+        const enableSoundVar: GameFinderVar = 'gamefinder.enableSound';
+        const enableSoundVarValue = await Axios.get('/api/coach/getvar/' + enableSoundVar);
+
+        const enableZenModeVar: GameFinderVar = 'gamefinder.zenMode';
+        const enableZenModeVarValue = await Axios.get('/api/coach/getvar/' + enableZenModeVar);
+
         return {
-            audio: true,
+            audio: enableSoundVarValue.data[enableSoundVar] === 'Yes',
             hiddenCoaches: hiddenCoaches,
+            zenMode: enableZenModeVarValue.data[enableZenModeVar] === 'Yes',
         };
     }
 

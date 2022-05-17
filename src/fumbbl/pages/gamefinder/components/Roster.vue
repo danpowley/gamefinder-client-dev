@@ -29,7 +29,7 @@
             </div>
             <template v-if="! isMyTeam">
                 <div class="rosteroffers">
-                    <div class="title">Send offers:</div>
+                    <div class="title">Send offers <span class="zenmodeonly">(against {{ rosterData.teamValue/1000 }}k {{ rosterData.roster.name }})</span>:</div>
                     <template v-if="ownTeamsOfferable.length > 0">
                         <div style="margin-bottom: 10px;">Click any of the following teams to send an offer.</div>
                     </template>

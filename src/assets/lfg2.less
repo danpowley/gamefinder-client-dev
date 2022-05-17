@@ -17,6 +17,34 @@
 #gamefinder {
   margin-top: 15px;
 
+  .zenmodeonly {
+    display: none;
+  }
+
+  &.zenmode {
+    .zenmodeonly {
+      display: inline;
+    }
+    .team > .details .name,
+    .team > .details .seasonsgames {
+      display: none;
+    }
+    .offeredteam.away .coach,
+    .offeredteam.away .name {
+      visibility: hidden;
+    }
+    .rosterouter {
+      .rosterinner {
+        .displayteam {
+          display: none;
+        }
+        .rosteroffers {
+          width: 100%;
+        }
+      }
+    }
+  }
+
   .basicbox {
     margin: 0 0 10px 0;
 
