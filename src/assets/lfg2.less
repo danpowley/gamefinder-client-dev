@@ -25,6 +25,11 @@
     .zenmodeonly {
       display: inline;
     }
+    #opponentslist .opponent .coach {
+      .coachname, .ranking {
+        display: none;
+      }
+    }
     .team > .details .name,
     .team > .details .seasonsgames {
       display: none;
@@ -589,6 +594,7 @@
         display: inline-block;
         line-height: 1em;
         margin-top: 3px;
+        margin-right: 3px;
         border-radius: 3px;
         border: solid @Quicksilver 1px;
       }
@@ -600,6 +606,7 @@
 
       a.hidecoach {
         color: @Quicksilver;
+        margin-left: 3px;
       }
     }
 
