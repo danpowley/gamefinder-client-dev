@@ -40,7 +40,7 @@
                                 </div>
                                 <div class="info">
                                     <span v-show="isOfferedBySelectedOwnTeam(oppTeam)" class="offeredtag">Offered</span>
-                                    <span class="seasonsgames" title="Seasons and games played">S{{ oppTeam.seasonInfo.currentSeason }}:G{{ oppTeam.seasonInfo.gamesPlayedInCurrentSeason }}</span> {{ oppTeam.teamValue / 1000 }}k {{ oppTeam.roster.name }}
+                                    <span class="seasonsgames" title="Seasons and games played">S{{ oppTeam.seasonInfo.currentSeason }}:G{{ oppTeam.seasonInfo.gamesPlayedInCurrentSeason }}</span> <span class="teamvalue">{{ oppTeam.teamValue / 1000 }}k</span> <span class="rostername">{{ oppTeam.roster.name }}</span> <span v-if="isOwnTeamSelected" class="zenmodeonly">{{ getTvPercentDiff(selectedOwnTeam.teamValue, oppTeam.teamValue) }}% TV diff</span>
                                 </div>
                             </div>
                             <div class="links">
@@ -445,6 +445,10 @@ export default class OpponentsComponent extends Vue {
 
     public getTeamLogoUrl(team: any): string {
         return GameFinderHelpers.getTeamLogoUrl(team);
+    }
+
+    public getTvPercentDiff(teamValue1: number, teamValue2: number): number {
+        return GameFinderHelpers.getTvPercentDiff(teamValue1, teamValue2);
     }
 }
 </script>

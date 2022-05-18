@@ -30,13 +30,18 @@
         display: none;
       }
     }
-    .team > .details .name,
-    .team > .details .seasonsgames {
-      display: none;
+    .team > .details {
+      .name, .seasonsgames, .teamvalue {
+        display: none;
+      }
     }
-    .offeredteam.away .coach,
-    .offeredteam.away .name {
-      visibility: hidden;
+    .offeredteam.away {
+      .coach, .name {
+        visibility: hidden;
+      }
+      .desc .teamvalue {
+        display: none;
+      }
     }
     .rosterouter {
       .rosterinner {
