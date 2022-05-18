@@ -64,18 +64,18 @@ export default class DummyApi implements IBackendApi {
     public async getUserSettings(): Promise<UserSettings> {
         const hiddenCoachesResult = await Axios.get(this.getFullApiEndPointUrl('/api/coach/gethidden'));
 
-        const hiddenCoaches: {id: number, name: string, ranking: string}[] = hiddenCoachesResult.data;
+        const hiddenCoaches: Coach[] = hiddenCoachesResult.data;
+
+        const gameFinderUserSettingsPrefix = 'gamefinder.';
+        const gameFinderUserSettings = await Axios.get(this.getFullApiEndPointUrl('/api/coach/getvar/' + gameFinderUserSettingsPrefix));
 
         const enableSoundVar: GameFinderVar = 'gamefinder.enableSound';
-        const enableSoundVarValue = await Axios.get(this.getFullApiEndPointUrl('/api/coach/getvar/' + enableSoundVar));
-
         const enableZenModeVar: GameFinderVar = 'gamefinder.zenMode';
-        const enableZenModeVarValue = await Axios.get(this.getFullApiEndPointUrl('/api/coach/getvar/' + enableZenModeVar));
 
         return {
-            audio: enableSoundVarValue.data[enableSoundVar] === 'Yes',
+            audio: gameFinderUserSettings.data[enableSoundVar] === 'Yes',
             hiddenCoaches: hiddenCoaches,
-            zenMode: enableZenModeVarValue.data[enableZenModeVar] === 'Yes',
+            zenMode: gameFinderUserSettings.data[enableZenModeVar] === 'Yes',
         };
     }
 
