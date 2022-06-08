@@ -197,8 +197,8 @@ export default class RosterComponent extends Vue {
         return GameFinderHelpers.getTeamLogoUrl(team);
     }
 
-    public getPlayerIconStyle(positionId: number, positionIcons: {iconId: number, iconSize: number}[]): string {
-        const positionIconInfo = positionIcons[positionId];
+    public getPlayerIconStyle(positionId: number, positionIcons: any): string {
+        const positionIconInfo: {iconId: number, iconSize: number} = positionIcons[positionId];
         return `width: ${positionIconInfo.iconSize}px; height: ${positionIconInfo.iconSize}px; background: rgba(0, 0, 0, 0) url("https://fumbbl.com/i/${positionIconInfo.iconId}") repeat scroll 0px 0px;'"`;
     }
 
