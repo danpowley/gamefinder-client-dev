@@ -17,8 +17,8 @@
                             </div>
                             <div class="subinfo">
                                 <span class="rosterfact" title="Seasons and games played.">S{{ settings.displayTeam.seasonInfo.currentSeason }}:G{{ settings.displayTeam.seasonInfo.gamesPlayedInCurrentSeason }}</span>
-                                <span class="rosterfact" title="Team record: win/tie/loss">Record:{{ rosterData.record.wins }}/{{ rosterData.record.ties }}/{{ rosterData.record.losses }}</span>
-                                <span class="rosterfact" title="Players available (not MNG)">Players:{{ availablePlayers(rosterData.groupedPlayers) }}</span>
+                                <span class="rosterfact" title="Team record: win/tie/loss">Rec:{{ rosterData.record.wins }}/{{ rosterData.record.ties }}/{{ rosterData.record.losses }}</span>
+                                <span class="rosterfact" title="Players available (not MNG)">Pl:{{ availablePlayers(rosterData.groupedPlayers) }}</span>
                                 <span class="rosterfact" title="Number of rerolls">RR:{{ rosterData.rerolls }}</span>
                                 <span class="rosterfact" title="Apothecary">Apo:{{ rosterData.apothecary === 'Yes' ? 'Yes' : 'No' }}</span>
                                 <span class="rosterfact" title="Dedicated fans.">DF:{{rosterData.fanFactor}}</span>
@@ -171,6 +171,9 @@ export default class RosterComponent extends Vue {
             rosterData.positionIcons = positionIcons;
 
             for (const p of rosterData.players) {
+                if (p.number > 16) {
+                    p.skills.push('Loner');
+                }
                 p.skills.sort((a,b) => a.localeCompare(b));
                 p.skills = p.skills.join(', ');
             }

@@ -199,8 +199,11 @@
         <teamsettings v-if="featureFlags.teamSettings" :team="modalTeamSettingsTeam" @close-modal="closeModal"></teamsettings>
 
         <stateupdatespaused
-            :paused="stateUpdatesArePaused"
+            :paused="stateUpdatesArePaused && !backendVersionRequiresRefresh"
             @continue-session="handleContinueSession"></stateupdatespaused>
+
+        <backendversionrefresh
+            :refresh-required="backendVersionRequiresRefresh"></backendversionrefresh>
     </div>
 </template>
 
@@ -219,9 +222,11 @@ import SelectedOwnTeamComponent from "./components/SelectedOwnTeam.vue";
 import OffersComponent from "./components/Offers.vue";
 import OpponentsComponent from "./components/Opponents.vue";
 import StateUpdatesPausedComponent from "./components/StateUpdatesPaused.vue";
+import BackendVersionRefreshComponent from "./components/BackendVersionRefresh.vue";
 import IBackendApi from "./include/IBackendApi";
 import GameFinderHelpers from "./include/GameFinderHelpers";
 import { Coach, UserSettings } from "./include/Interfaces";
+import { AxiosError } from "axios";
 
 @Component({
     components: {
@@ -234,10 +239,14 @@ import { Coach, UserSettings } from "./include/Interfaces";
         'selectedownteam': SelectedOwnTeamComponent,
         'offers': OffersComponent,
         'opponents': OpponentsComponent,
-        'stateupdatespaused': StateUpdatesPausedComponent
+        'stateupdatespaused': StateUpdatesPausedComponent,
+        'backendversionrefresh': BackendVersionRefreshComponent,
     }
 })
 export default class GameFinder extends Vue {
+    private backendVersion: number | null = null;
+    private backendVersionRequiresRefresh: boolean = false;
+
     public isDevMode: boolean = false;
     private backendApi: IBackendApi;
 
@@ -285,7 +294,10 @@ export default class GameFinder extends Vue {
     }
 
     async mounted() {
-        await this.backendApi.activate();
+        await this.activate();
+
+        this.updateLastActiveTimestamp();
+
         this.userSettings = await this.backendApi.getUserSettings();
 
         this.refresh();
@@ -327,15 +339,24 @@ export default class GameFinder extends Vue {
                 enableGetStatePolling = false;
             }
 
+            if (this.backendVersionRequiresRefresh) {
+                enableGetStatePolling = false;
+            }
+
             try {
                 if (enableGetStatePolling) {
                     await this.getState();
                 }
                 this.stateUpdateErrorMessage = null;
             } catch (error) {
-                setTimeout(() => {
-                    this.stateUpdateErrorMessage = (error as Error).name + ': ' + (error as Error).message;
-                }, 1000);
+                if (this.backendApi.isAxiosError((error as Error)) && (error as AxiosError).response.status === 400) {
+                    // 400 status code means the state has rejected our request as the version has changed, we need to force a reload.
+                    this.backendVersionHasChanged();
+                } else {
+                    setTimeout(() => {
+                        this.stateUpdateErrorMessage = (error as Error).name + ': ' + (error as Error).message;
+                    }, 1000);
+                }
             }
 
             setTimeout(getStateWithSetTimeout, this.secondsBetweenGetStateCalls*1000);
@@ -346,11 +367,31 @@ export default class GameFinder extends Vue {
 
     public async getState()
     {
-        const matchesAndTeamsState = await this.backendApi.getState();
+        if (this.backendVersion === null) {
+            return;
+        }
+
+        const matchesAndTeamsState = await this.backendApi.getState(this.backendVersion);
+
         this.refreshMyTeams(matchesAndTeamsState);
         this.refresh();
         this.matchesAndTeamsState = matchesAndTeamsState;
         this.matchesAndTeamsStateLastUpdated = Date.now();
+    }
+
+    private async activate() {
+        const backendVersion = await this.backendApi.activate();
+        if (this.backendVersion === null) {
+            // this.backendVersion starts as null, so this only gets set on first call to activate
+            this.backendVersion = backendVersion;
+        }
+    }
+
+    private backendVersionHasChanged() {
+        this.backendVersionRequiresRefresh = true;
+        setTimeout(() => {
+            window.location.reload();
+        }, 30000);
     }
 
     private refreshMyTeams(matchesAndTeamsState: {matches: any[], teams: any[]})
@@ -367,7 +408,7 @@ export default class GameFinder extends Vue {
         if (myTeams === null) {
             if (this.launchGameOffer === null) {
                 // reactivate to recover from a backend restart (only if a game has not been launched)
-                this.backendApi.activate();
+                this.activate();
             }
             return;
         }
@@ -419,7 +460,7 @@ export default class GameFinder extends Vue {
     }
 
     public async showLfg() {
-        await this.backendApi.activate();
+        await this.activate();
         await this.getState();
 
         // always select if only 1 team (and not activated for blackbox)
@@ -746,7 +787,7 @@ export default class GameFinder extends Vue {
     }
 
     public async handleContinueSession() {
-        await this.backendApi.activate();
+        await this.activate();
         await this.getState();
         this.stateUpdatesArePaused = false;
     }
@@ -756,7 +797,7 @@ export default class GameFinder extends Vue {
         this.downloadJnlpOffer = null;
         this.allowRejoinAfterDownload = false;
         this.schedulingErrorMessage = null;
-        await this.backendApi.activate();
+        await this.activate();
         await this.getState();
     }
 

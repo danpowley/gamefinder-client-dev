@@ -9,12 +9,20 @@ export default class DummyApi implements IBackendApi {
         return this.dummyApiDomain + endPoint;
     }
 
-    public async activate(): Promise<void> {
-        await Axios.post(this.getFullApiEndPointUrl('/api/gamefinder/activate'));
+    public isAxiosError(error: Error): boolean {
+        return Axios.isAxiosError(error);
     }
 
-    public async getState(): Promise<any> {
-        const result = await Axios.post(this.getFullApiEndPointUrl('/api/gamefinder/state'));
+    public async activate(): Promise<number> {
+        const result = await Axios.post(this.getFullApiEndPointUrl('/api/gamefinder/activate'));
+        return result.data.version;
+    }
+
+    public async getState(backendVersion: number): Promise<any> {
+        // IMPORTANT: this is posting to the proxy using a JSON body, real FUMBBL expects form data body
+        // Couldn't get form data body to work with the proxy server, so doing this instead.
+        // FumbblApi class uses a FormData object for the request body.
+        const result = await Axios.post(this.getFullApiEndPointUrl('/api/gamefinder/state'), {version: backendVersion});
         return result.data;
     }
 
