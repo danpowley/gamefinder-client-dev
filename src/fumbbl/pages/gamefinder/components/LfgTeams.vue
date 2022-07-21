@@ -90,7 +90,6 @@ export default class LfgTeamsComponent extends Vue {
 
     public async showLfg() {
         this.activateTeamsButtonClicked = true;
-        await this.updateBlackboxData();
         this.$emit('show-lfg');
     }
 
@@ -131,17 +130,6 @@ export default class LfgTeamsComponent extends Vue {
             }
         }
         return teamsByDivision;
-    }
-
-    private async updateBlackboxData() {
-        const teams = await this.backendApi.allTeams(this.$props.coachName);
-        const availableTeams = teams.filter(GameFinderPolicies.teamIsCompetitiveDivision);
-        const chosenTeams = availableTeams.filter(GameFinderPolicies.teamIsLfg);
-
-        this.$emit('blackbox-data', {
-            available: availableTeams.length,
-            chosen: chosenTeams.length
-        });
     }
 
     public toggleAll(event) {

@@ -1,7 +1,7 @@
 <template>
     <div id="cards">
         <div class="card" v-for="myTeam in myTeams" :key="myTeam.id" @click="select(myTeam)"
-            :class="{active: myTeam.id === selectedOwnTeamId}"
+            :class="{active: myTeam.id === selectedOwnTeamId, highlight: blackboxActivated && myTeam.division === 'Competitive', lowlight: blackboxActivated && myTeam.division !== 'Competitive'}"
             :title="myTeam.name + '\n' + myTeam.roster.name + '\n' + myTeam.division + (myTeam.league !== null && myTeam.league.name ? ' (' + myTeam.league.name + ')' : '')">
             <img class="logo" :src="getTeamLogoUrl(myTeam)">
             <div class="name"><span v-if="myTeam.isInTournament" title="This team is currently in a tournament.">🏆 </span>{{ myTeam.name }}</div>
@@ -27,6 +27,10 @@ import GameFinderHelpers from '../include/GameFinderHelpers';
         },
         myTeams: {
             type: Array,
+            required: true
+        },
+        blackboxActivated: {
+            type: Boolean,
             required: true
         }
     }

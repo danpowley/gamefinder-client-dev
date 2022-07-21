@@ -254,6 +254,38 @@
     }
   }
 
+  #blackboxmatchscheduled {
+    width: 600px;
+    &.basicbox {
+      margin: 20px auto 0 auto;
+    }
+    .header {
+      text-align: center;
+    }
+    .teams {
+      margin-bottom: 10px;
+      display: flex;
+      .details {
+        flex-grow: 1;
+        display: flex;
+        .homedetails {
+          padding-left: 10px;
+          width: 50%;
+        }
+        .awaydetails {
+          padding-right: 10px;
+          width: 50%;
+          text-align: right;
+        }
+      }
+      .name {
+        font-size: 14pt;
+        max-width: 300px;
+        .mixin_abbreviate();
+      }
+    }
+  }
+
   #gamefindergrid {
     width: 960px;
     display: grid;
@@ -354,6 +386,14 @@
 
         &:hover {
           border-color: @Carmine;
+        }
+
+        &.highlight {
+          border-color: gold;
+        }
+
+        &.lowlight {
+          opacity: 0.3;
         }
 
         .logo {
@@ -530,20 +570,83 @@
     }
   }
 
+  .blackboxheader {
+    position: relative;
+    .blackboxstatus {
+      font-size: 65%;
+      position: absolute;
+      top: 4px;
+      right: 6px;
+    }
+  }
+
   #blackboxwrapper {
-    overflow-anchor: none;
-    min-height: 100px;
-
-    .nextdraw {
-      margin-bottom: 10px;
+    .blackboxpaused {
+      display: flex;
+      flex-direction: column;
+      height: 90px;
+      .pausedtop {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .pausedtimerwrapper {
+        flex-grow: 0;
+        height: 3px;
+        position: relative;
+        .pausedtimer {
+          position: absolute;
+          height: 3px;
+          background: @brightGreen;
+          // transition: width 1s;
+          // transition-timing-function: linear;
+        }
+      }
+      .pausedbottom {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
     }
 
-    .teamsready {
-      margin: 10px 0;
-    }
-
-    .infonote {
-      margin-top: 10px;
+    .blackboxactive {
+      display: flex;
+      flex-direction: column;
+      height: 90px;
+      .pausedtop {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .pausedtimerwrapper {
+        flex-grow: 0;
+        height: 3px;
+        position: relative;
+        .pausedtimer {
+          position: absolute;
+          height: 3px;
+          background: @brightGreen;
+          // transition: width 1s;
+          // transition-timing-function: linear;
+        }
+      }
+      .pausedbottom {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        .activationcontrols {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          input[type=checkbox] {
+            transform: scale(1.3);
+          }
+        }
+      }
     }
   }
 

@@ -14,8 +14,7 @@
             v-if="display === 'TEAMS' || display === 'TEAMS_ACTIVATING'"
             :is-dev-mode="isDevMode"
             :coach-name="coachName"
-            @show-lfg="showLfg"
-            @blackbox-data="handleBlackboxData"></lfgteams>
+            @show-lfg="showLfg"></lfgteams>
 
         <div id="startdialog" class="basicbox" v-if="startDialogOffer !== null">
             <div class="header">Game offered</div>
@@ -93,7 +92,38 @@
                 </template>
             </div>
         </div>
-        <div id="gamefindergrid" :class="{manyteamsgrid: me.teams.length > 4, fewteamsgrid: me.teams.length <= 4}" v-show="launchGameOffer === null && startDialogOffer === null && display === 'LFG'">
+        <div id="blackboxmatchscheduled" class="basicbox" v-if="blackboxMatchScheduled !== null">
+            <div class="header">Blackbox match scheduled</div>
+            <div class="content">
+                <div class="teams">
+                    <div class="details">
+                        <div class="homedetails">
+                            <div class="name">
+                                {{ blackboxMatchScheduled.home.name }}
+                            </div>
+                            <div class="coach">
+                                {{ blackboxMatchScheduled.home.coach.name }}
+                            </div>
+                            <div class="desc">
+                                TV {{ blackboxMatchScheduled.home.tv }} {{ blackboxMatchScheduled.home.roster.name }}
+                            </div>
+                        </div>
+                        <div class="awaydetails">
+                            <div class="name">
+                                {{ blackboxMatchScheduled.away.name }}
+                            </div>
+                            <div class="coach">
+                                {{ blackboxMatchScheduled.away.coach.name }}
+                            </div>
+                            <div class="desc">
+                                {{ blackboxMatchScheduled.away.roster.name }} TV {{ blackboxMatchScheduled.away.tv }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="gamefindergrid" :class="{manyteamsgrid: me.teams.length > 4, fewteamsgrid: me.teams.length <= 4}" v-show="launchGameOffer === null && startDialogOffer === null && blackboxMatchScheduled === null && display === 'LFG'">
             <div class="overallstatus">
                 <span class="overallinfo">You have {{ me.teams.length }} team{{ me.teams.length === 1 ? '' : 's' }} looking for a game.</span>
                 <a class="chooseteamslink" href="#" @click.prevent="showTeams">Choose teams</a>
@@ -102,12 +132,14 @@
             <teamcards
                 :selected-own-team-id="selectedOwnTeam ? selectedOwnTeam.id : 0"
                 :my-teams="me.teams"
+                :blackbox-activated="blackboxActivated"
                 @select="selectTeam"></teamcards>
             <div id="offers">
                 <blackbox
                     v-if="featureFlags.blackbox"
-                    :available="blackboxData.available"
-                    :chosen="blackboxData.chosen"></blackbox>
+                    :has-blackbox-teams-activated="hasBlackboxTeamsActivated"
+                    @blackbox-activation="handleBlackboxActivation"
+                    @blackbox-match-scheduled="handleBlackboxMatchScheduled"></blackbox>
 
                 <offers
                     :is-dev-mode="isDevMode"
@@ -130,6 +162,7 @@
                 <selectedownteam
                     :team="selectedOwnTeam"
                     :teamSettingsEnabled="featureFlags.teamSettings"
+                    :blackbox-activated="blackboxActivated"
                     @deselect-team="deselectTeam"
                     @open-modal="openModal"></selectedownteam>
 
@@ -210,7 +243,7 @@ export default class GameFinder extends Vue {
 
     public coachName: string | null = null;
     public display: 'LFG' | 'TEAMS' | 'TEAMS_ACTIVATING' = 'LFG';
-    public featureFlags = {blackbox: false, teamSettings: false};
+    public featureFlags = {blackbox: true, teamSettings: false};
     public userSettings: UserSettings | null = null;
 
     public secondsBetweenGetStateCalls: number = 1;
@@ -237,7 +270,8 @@ export default class GameFinder extends Vue {
 
     public lastActiveTimestamp: number = 0;
 
-    public blackboxData: {available: number, chosen: number} = {available: 0, chosen: 0};
+    public blackboxActivated: boolean = false;
+    public blackboxMatchScheduled: {home: any, away: any} | null = null;
 
     public modalRosterSettings: {isMyTeam: boolean, displayTeam: any, ownTeamsOfferable: any[]} | null = null;
     public modalTeamSettingsTeam: any | null = null;
@@ -388,8 +422,8 @@ export default class GameFinder extends Vue {
         await this.backendApi.activate();
         await this.getState();
 
-        // always select if only 1 team
-        if (this.me.teams.length === 1) {
+        // always select if only 1 team (and not activated for blackbox)
+        if (this.me.teams.length === 1 && this.blackboxActivated === false) {
             const onlyTeam = this.me.teams[0];
             this.selectedOwnTeam = onlyTeam;
         }
@@ -532,6 +566,10 @@ export default class GameFinder extends Vue {
     }
 
     public selectTeam(team) {
+        if (this.blackboxActivated) {
+            return;
+        }
+
         if (this.selectedOwnTeam && this.selectedOwnTeam.id === team.id) {
             this.deselectTeam();
         } else {
@@ -545,10 +583,6 @@ export default class GameFinder extends Vue {
         this.selectedOwnTeam = null;
 
         this.refresh();
-    }
-
-    public handleBlackboxData(blackboxData: {available: number, chosen: number}) {
-        this.blackboxData = blackboxData;
     }
 
     public handleHideMatch(myTeamId: number, opponentTeamId: number): void {
@@ -724,6 +758,25 @@ export default class GameFinder extends Vue {
         this.schedulingErrorMessage = null;
         await this.backendApi.activate();
         await this.getState();
+    }
+
+    public handleBlackboxActivation(isActivated: boolean): void {
+        if (isActivated) {
+            this.selectedOwnTeam = null;
+        }
+        this.blackboxActivated = isActivated;
+    }
+
+    public handleBlackboxMatchScheduled(home: any, away: any): void {
+        if (true) {
+            // disable this for testing.
+            //return;
+        }
+        this.blackboxMatchScheduled = {home, away};
+    }
+
+    public get hasBlackboxTeamsActivated(): boolean {
+        return this.me.teams.filter(GameFinderPolicies.teamIsCompetitiveDivision).length > 0;
     }
 }
 </script>
