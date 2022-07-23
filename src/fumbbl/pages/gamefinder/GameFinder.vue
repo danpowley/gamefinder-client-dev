@@ -14,7 +14,8 @@
             v-if="display === 'TEAMS' || display === 'TEAMS_ACTIVATING'"
             :is-dev-mode="isDevMode"
             :coach-name="coachName"
-            @show-lfg="showLfg"></lfgteams>
+            @show-lfg="showLfg"
+            @open-modal="openModal"></lfgteams>
 
         <div id="startdialog" class="basicbox" v-if="startDialogOffer !== null">
             <div class="header">Game offered</div>
@@ -196,7 +197,7 @@
             @user-settings-changed="handleUserSettingsChanged"
             @close-modal="closeModal"></settings>
 
-        <teamsettings v-if="featureFlags.teamSettings" :team="modalTeamSettingsTeam" @close-modal="closeModal"></teamsettings>
+        <teamsettings :team="modalTeamSettingsTeam" @close-modal="closeModal"></teamsettings>
 
         <stateupdatespaused
             :paused="stateUpdatesArePaused && !backendVersionRequiresRefresh"

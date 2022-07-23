@@ -72,7 +72,6 @@ export default class BlackboxComponent extends Vue {
     }
 
     private fakeUpdateBlackboxStatus() {
-        console.log(this.blackboxStatus.status, this.blackboxStatus.secondsUntilActive, this.blackboxStatus.secondsUntilDraw);
         if (this.blackboxStatus.status === 'PAUSED') {
             if (this.blackboxStatus.secondsUntilActive > 0) {
                 this.blackboxStatus.secondsUntilActive = this.blackboxStatus.secondsUntilActive - 1;

@@ -29,6 +29,12 @@
                                 <div class="teamdetails">
                                     <div class="teamname">{{ team.name }}</div>
                                     <div class="teaminfo"><span title="Seasons and games played">S{{ team.seasonInfo.currentSeason }}:G{{ team.seasonInfo.gamesPlayedInCurrentSeason }}</span> TV {{ team.teamValue/1000 }}k {{ team.roster.name }}</div>
+                                    <div class="teammode" v-if="team.division === 'Competitive'">
+                                        <div class="mode" title="Competitive division mode: Mixed / Strict / Open">
+                                            {{ team.mode.current }}
+                                        </div>
+                                        <a href="#" @click.prevent="openModal('TEAM_SETTINGS', {team: team})">Change mode</a>
+                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -95,11 +101,21 @@ export default class LfgTeamsComponent extends Vue {
 
     private async reloadTeams() {
         const teams = await this.backendApi.allTeams(this.$props.coachName);
+        this.addFakeModes(teams);
         this.totalTeams = teams.length;
         this.checked = teams.filter(GameFinderPolicies.teamIsLfg).map((team) => team.id);
         teams.sort(GameFinderPolicies.sortTeamByDivisionNameLeagueNameTeamName);
         this.teamsByDivision = this.groupTeamsByDivisionAndLeague(teams);
         this.updateAllChecked();
+    }
+
+    private addFakeModes(teams) {
+        for (const team of teams) {
+            team.mode = {
+                current: 'Mixed',
+                available: ['Strict', 'Open'],
+            }
+        }
     }
 
     private groupTeamsByDivisionAndLeague(teams: any[]): any[] {
@@ -197,6 +213,10 @@ export default class LfgTeamsComponent extends Vue {
 
     public getTeamLogoUrl(team: any): string {
         return GameFinderHelpers.getTeamLogoUrl(team);
+    }
+
+    public openModal(name: string, modalSettings: any) {
+        this.$emit('open-modal', name, modalSettings);
     }
 }
 </script>
