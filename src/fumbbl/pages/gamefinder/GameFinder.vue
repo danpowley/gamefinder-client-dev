@@ -226,7 +226,7 @@ import StateUpdatesPausedComponent from "./components/StateUpdatesPaused.vue";
 import BackendVersionRefreshComponent from "./components/BackendVersionRefresh.vue";
 import IBackendApi from "./include/IBackendApi";
 import GameFinderHelpers from "./include/GameFinderHelpers";
-import { Coach, UserSettings } from "./include/Interfaces";
+import { BlackboxMatch, Coach, UserSettings } from "./include/Interfaces";
 import { AxiosError } from "axios";
 
 @Component({
@@ -281,7 +281,7 @@ export default class GameFinder extends Vue {
     public lastActiveTimestamp: number = 0;
 
     public blackboxActivated: boolean = false;
-    public blackboxMatchScheduled: {home: any, away: any} | null = null;
+    public blackboxMatchScheduled: BlackboxMatch | null = null;
 
     public modalRosterSettings: {isMyTeam: boolean, displayTeam: any, ownTeamsOfferable: any[]} | null = null;
     public modalTeamSettingsTeam: any | null = null;
@@ -809,12 +809,12 @@ export default class GameFinder extends Vue {
         this.blackboxActivated = isActivated;
     }
 
-    public handleBlackboxMatchScheduled(home: any, away: any): void {
+    public handleBlackboxMatchScheduled(match: BlackboxMatch): void {
         if (true) {
             // disable this for testing.
             //return;
         }
-        this.blackboxMatchScheduled = {home, away};
+        this.blackboxMatchScheduled = match;
     }
 
     public get hasBlackboxTeamsActivated(): boolean {
