@@ -103,4 +103,12 @@ export default class DummyApi implements IBackendApi {
     public async unhideCoach(coachName: string): Promise<void> {
         await Axios.post(this.getFullApiEndPointUrl('/api/coach/unhide/' + coachName));
     }
+
+    public async blackboxActivate(): Promise<void> {
+        await Axios.post(this.getFullApiEndPointUrl('/api/blackbox/activate'));
+    }
+
+    public async blackboxDeactivate(): Promise<void> {
+        await Axios.post(this.getFullApiEndPointUrl('/api/blackbox/deactivate'));
+    }
 }

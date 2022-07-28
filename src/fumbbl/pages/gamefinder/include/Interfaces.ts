@@ -44,7 +44,7 @@ export interface Blackbox {
   },
   previous: {
     userMatch: BlackboxMatch | null,
-    time: number,
+    time: string,
     matches: BlackboxMatch[],
   },
 };

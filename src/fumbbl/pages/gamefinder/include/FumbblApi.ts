@@ -105,4 +105,12 @@ export default class FumbblApi implements IBackendApi {
     public async unhideCoach(coachName: string): Promise<void> {
         await Axios.post('/api/coach/unhide/' + coachName);
     }
+
+    public async blackboxActivate(): Promise<void> {
+        await Axios.post('/api/blackbox/activate');
+    }
+
+    public async blackboxDeactivate(): Promise<void> {
+        await Axios.post('/api/blackbox/deactivate');
+    }
 }

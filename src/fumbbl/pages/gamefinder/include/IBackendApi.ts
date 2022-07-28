@@ -34,4 +34,8 @@ export default interface IBackendApi {
     hideCoach(coachName: string): Promise<void>;
 
     unhideCoach(coachName: string): Promise<void>;
+
+    blackboxActivate(): void;
+
+    blackboxDeactivate(): void;
 }

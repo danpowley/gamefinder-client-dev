@@ -93,38 +93,39 @@
                 </template>
             </div>
         </div>
-        <div id="blackboxmatchscheduled" class="basicbox" v-if="blackboxMatchScheduled !== null">
+        <div id="blackboxmatchscheduled" class="basicbox" v-if="blackboxUserMatch">
             <div class="header">Blackbox match scheduled</div>
             <div class="content">
                 <div class="teams">
                     <div class="details">
                         <div class="homedetails">
                             <div class="name">
-                                {{ blackboxMatchScheduled.home.name }}
+                                {{ blackboxUserMatch.home.name }}
                             </div>
                             <div class="coach">
-                                {{ blackboxMatchScheduled.home.coach.name }}
+                                {{ blackboxUserMatch.home.coach.name }}
                             </div>
                             <div class="desc">
-                                TV {{ blackboxMatchScheduled.home.tv }} {{ blackboxMatchScheduled.home.roster.name }}
+                                TV {{ blackboxUserMatch.home.tv }} {{ blackboxUserMatch.home.roster.name }}
                             </div>
                         </div>
                         <div class="awaydetails">
                             <div class="name">
-                                {{ blackboxMatchScheduled.away.name }}
+                                {{ blackboxUserMatch.away.name }}
                             </div>
                             <div class="coach">
-                                {{ blackboxMatchScheduled.away.coach.name }}
+                                {{ blackboxUserMatch.away.coach.name }}
                             </div>
                             <div class="desc">
-                                {{ blackboxMatchScheduled.away.roster.name }} TV {{ blackboxMatchScheduled.away.tv }}
+                                {{ blackboxUserMatch.away.roster.name }} TV {{ blackboxUserMatch.away.tv }}
                             </div>
                         </div>
                     </div>
                 </div>
+                <div>Other teams in draw: <a href="#" @click.prevent="openModal('BLACKBOX_PREVIOUS_DRAW', {})">view</a></div>
             </div>
         </div>
-        <div id="gamefindergrid" :class="{manyteamsgrid: me.teams.length > 4, fewteamsgrid: me.teams.length <= 4}" v-show="launchGameOffer === null && startDialogOffer === null && blackboxMatchScheduled === null && display === 'LFG'">
+        <div id="gamefindergrid" :class="{manyteamsgrid: me.teams.length > 4, fewteamsgrid: me.teams.length <= 4}" v-show="launchGameOffer === null && startDialogOffer === null && blackboxUserMatch === null && display === 'LFG'">
             <div class="overallstatus">
                 <span class="overallinfo">You have {{ me.teams.length }} team{{ me.teams.length === 1 ? '' : 's' }} looking for a game.</span>
                 <a class="chooseteamslink" href="#" @click.prevent="showTeams">Choose teams</a>
@@ -133,14 +134,15 @@
             <teamcards
                 :selected-own-team-id="selectedOwnTeam ? selectedOwnTeam.id : 0"
                 :my-teams="me.teams"
-                :blackbox-activated="blackboxActivated"
+                :blackbox-activated="blackboxUserActivated"
                 @select="selectTeam"></teamcards>
             <div id="offers">
                 <blackbox
                     v-if="featureFlags.blackbox"
                     :has-blackbox-teams-activated="hasBlackboxTeamsActivated"
+                    :blackbox="matchesAndTeamsState.blackbox"
                     @blackbox-activation="handleBlackboxActivation"
-                    @blackbox-match-scheduled="handleBlackboxMatchScheduled"></blackbox>
+                    @open-modal="openModal"></blackbox>
 
                 <offers
                     :is-dev-mode="isDevMode"
@@ -163,7 +165,7 @@
                 <selectedownteam
                     :team="selectedOwnTeam"
                     :teamSettingsEnabled="featureFlags.teamSettings"
-                    :blackbox-activated="blackboxActivated"
+                    :blackbox-activated="blackboxUserActivated"
                     @deselect-team="deselectTeam"
                     @open-modal="openModal"></selectedownteam>
 
@@ -199,6 +201,11 @@
 
         <teamsettings :team="modalTeamSettingsTeam" @close-modal="closeModal"></teamsettings>
 
+        <blackboxpreviousdraw
+            :is-open="modalBlackboxPreviousDraw"
+            :blackbox="matchesAndTeamsState.blackbox"
+            @close-modal="closeModal"></blackboxpreviousdraw>
+
         <stateupdatespaused
             :paused="stateUpdatesArePaused && !backendVersionRequiresRefresh"
             @continue-session="handleContinueSession"></stateupdatespaused>
@@ -224,9 +231,10 @@ import OffersComponent from "./components/Offers.vue";
 import OpponentsComponent from "./components/Opponents.vue";
 import StateUpdatesPausedComponent from "./components/StateUpdatesPaused.vue";
 import BackendVersionRefreshComponent from "./components/BackendVersionRefresh.vue";
+import BlackboxPreviousDrawComponent from "./components/BlackboxPreviousDraw.vue";
 import IBackendApi from "./include/IBackendApi";
 import GameFinderHelpers from "./include/GameFinderHelpers";
-import { BlackboxMatch, Coach, UserSettings } from "./include/Interfaces";
+import { Blackbox, BlackboxMatch, Coach, UserSettings } from "./include/Interfaces";
 import { AxiosError } from "axios";
 
 @Component({
@@ -242,6 +250,7 @@ import { AxiosError } from "axios";
         'opponents': OpponentsComponent,
         'stateupdatespaused': StateUpdatesPausedComponent,
         'backendversionrefresh': BackendVersionRefreshComponent,
+        'blackboxpreviousdraw': BlackboxPreviousDrawComponent,
     }
 })
 export default class GameFinder extends Vue {
@@ -275,17 +284,15 @@ export default class GameFinder extends Vue {
 
     // the offers property is primarily managed by the OffersComponent, they're held here and passed to OffersComponent as a prop
     public offers:any = [];
-    public matchesAndTeamsState: {matches: any[], teams: any[]} = {matches: [], teams: []};
+    public matchesAndTeamsState: {matches: any[], teams: any[], blackbox: Blackbox | null} = {matches: [], teams: [], blackbox: null};
     public matchesAndTeamsStateLastUpdated: number = 0;
 
     public lastActiveTimestamp: number = 0;
 
-    public blackboxActivated: boolean = false;
-    public blackboxMatchScheduled: BlackboxMatch | null = null;
-
     public modalRosterSettings: {isMyTeam: boolean, displayTeam: any, ownTeamsOfferable: any[]} | null = null;
     public modalTeamSettingsTeam: any | null = null;
     public modalSettingsShow: boolean = false;
+    public modalBlackboxPreviousDraw: boolean = false;
 
     async beforeMount() {
         const appElement = document.getElementById("vuecontent");
@@ -378,6 +385,7 @@ export default class GameFinder extends Vue {
         this.refresh();
         this.matchesAndTeamsState = matchesAndTeamsState;
         this.matchesAndTeamsStateLastUpdated = Date.now();
+        this.refreshBlackbox();
     }
 
     private async activate() {
@@ -460,12 +468,18 @@ export default class GameFinder extends Vue {
         this.offerableOpponentTeamIds = offerableOpponentTeamIds;
     }
 
+    private refreshBlackbox() {
+        if (this.blackboxUserActivated) {
+            this.selectedOwnTeam = null;
+        }
+    }
+
     public async showLfg() {
         await this.activate();
         await this.getState();
 
         // always select if only 1 team (and not activated for blackbox)
-        if (this.me.teams.length === 1 && this.blackboxActivated === false) {
+        if (this.me.teams.length === 1 && this.blackboxUserActivated === false) {
             const onlyTeam = this.me.teams[0];
             this.selectedOwnTeam = onlyTeam;
         }
@@ -608,7 +622,7 @@ export default class GameFinder extends Vue {
     }
 
     public selectTeam(team) {
-        if (this.blackboxActivated) {
+        if (this.blackboxUserActivated) {
             return;
         }
 
@@ -720,7 +734,7 @@ export default class GameFinder extends Vue {
     private onOuterModalClick(e) {
         const clickTarget = e.target;
         const modals = [
-            document.querySelector('.rosterouter, .settingsouter, .teamsettingsouter'),
+            document.querySelector('.rosterouter, .settingsouter, .teamsettingsouter, .blackboxpreviousdrawouter'),
         ];
         for (const modal of modals) {
             if (clickTarget == modal) {
@@ -737,6 +751,8 @@ export default class GameFinder extends Vue {
             this.modalTeamSettingsTeam = modalSettings.team;
         } else if (modalName === 'SETTINGS') {
             this.modalSettingsShow = true;
+        } else if (modalName === 'BLACKBOX_PREVIOUS_DRAW') {
+            this.modalBlackboxPreviousDraw = true;
         }
     }
 
@@ -781,6 +797,7 @@ export default class GameFinder extends Vue {
         this.modalRosterSettings = null;
         this.modalTeamSettingsTeam = null;
         this.modalSettingsShow = false;
+        this.modalBlackboxPreviousDraw = false;
     }
 
     public getLargeTeamLogoUrl(team: any): string {
@@ -804,21 +821,31 @@ export default class GameFinder extends Vue {
 
     public handleBlackboxActivation(isActivated: boolean): void {
         if (isActivated) {
-            this.selectedOwnTeam = null;
+            this.backendApi.blackboxActivate();
+        } else {
+            this.backendApi.blackboxDeactivate();
         }
-        this.blackboxActivated = isActivated;
-    }
-
-    public handleBlackboxMatchScheduled(match: BlackboxMatch): void {
-        if (true) {
-            // disable this for testing.
-            //return;
-        }
-        this.blackboxMatchScheduled = match;
     }
 
     public get hasBlackboxTeamsActivated(): boolean {
+        // this is just for demo, doesn't take account of team mode, or tournaments, probably other things too.
         return this.me.teams.filter(GameFinderPolicies.teamIsCompetitiveDivision).length > 0;
+    }
+
+    public get blackboxUserActivated(): boolean {
+        if (this.matchesAndTeamsState.blackbox === null) {
+            return false;
+        }
+
+        return this.matchesAndTeamsState.blackbox.userActivated;
+    }
+
+    public get blackboxUserMatch(): BlackboxMatch | null {
+        if (this.matchesAndTeamsState.blackbox === null) {
+            return null;
+        }
+
+        return this.matchesAndTeamsState.blackbox.previous.userMatch;
     }
 }
 </script>
