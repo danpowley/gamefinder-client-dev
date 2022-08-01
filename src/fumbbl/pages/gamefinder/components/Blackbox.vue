@@ -2,38 +2,46 @@
     <div class="basicbox" v-if="blackbox !== null">
         <div class="header blackboxheader">Blackbox<span class="blackboxstatus">{{ blackbox.status }}</span></div>
         <div class="content" id="blackboxwrapper">
-            <div class="blackboxpaused" v-if="blackbox.status === 'PAUSED'">
-                <div class="pausedtop">
-                    Time remaining.
+            <a href="#" @click.prevent="openModal('BLACKBOX_ROUNDS')" class="blackboxrounds">Rounds</a>
+            <div v-if="zeroSecondsRemaining" class="blackboxpaused">
+                Please wait...
+            </div>
+            <div v-else-if="blackbox.status === 'Paused'" class="blackboxpaused">
+                <div class="blackboxtop">
+                    Blackbox is paused
                 </div>
-                <div class="pausedtimerwrapper"><div class="pausedtimer" :style="{ width: (100 * blackbox.secondsRemaining / blackbox.config.pauseDuration) + '%', left: (50 - 50 * blackbox.secondsRemaining / blackbox.config.pauseDuration) + '%'}"></div></div>
-                <div class="pausedbottom">
-                    {{ Math.ceil(blackbox.secondsRemaining/60) }} minutes.
+                <div class="timerwrapper"><div class="timer" :style="{ width: (100 * blackbox.secondsRemaining / config.pauseDuration) + '%', left: (50 - 50 * blackbox.secondsRemaining / config.pauseDuration) + '%'}"></div></div>
+                <div class="blackboxbottom">
+                    Active in {{ timeRemainingDisplay }}
                 </div>
             </div>
-            <div class="blackboxactive" v-if="blackbox.status === 'ACTIVE'">
-                <div class="pausedtop">
-                    {{ blackbox.coachCount }} coaches activated ({{ Math.ceil(blackbox.secondsRemaining/60) }} minutes left)
+            <div v-else-if="blackbox.status === 'Active'" class="blackboxactive">
+                <div class="blackboxtop">
+                    {{ blackbox.coachCount }} {{ pluralise(blackbox.coachCount, 'coach', 'coaches') }} activated
                 </div>
-                <div class="pausedtimerwrapper"><div class="pausedtimer" :style="{ width: (100 * blackbox.secondsRemaining / blackbox.config.activeDuration) + '%', left: (50 - 50 * blackbox.secondsRemaining / blackbox.config.activeDuration) + '%'}"></div></div>
-                <div class="pausedbottom">
-                    <div class="activationcontrols" v-if="hasBlackboxTeamsActivated">
-                        <div>{{ userActivated ? 'Activated' : 'Not activated' }}</div>
-                        <div v-if="!pleaseWait">
-                            <button v-if="userActivated" type="checkbox" @click="handleDeactivation">Deactivate</button>
-                            <button v-if="!userActivated" type="checkbox" @click="handleActivation">Activate</button>
+                <div class="timerwrapper"><div class="timer" :style="{ width: (100 * blackbox.secondsRemaining / config.activeDuration) + '%', left: (50 - 50 * blackbox.secondsRemaining / config.activeDuration) + '%'}"></div></div>
+                <div class="blackboxbottom">
+                    <div class="timeremaining">
+                        Draw in {{ timeRemainingDisplay }}
+                    </div>
+                    <div class="activationcontrolsouter">
+                        <div class="activationcontrolsinner" v-if="hasBlackboxTeamsActivated">
+                            <div v-if="!pleaseWait">
+                                <button v-if="userActivated" type="checkbox" @click="handleDeactivation">Deactivate my teams</button>
+                                <button v-if="!userActivated" type="checkbox" @click="handleActivation">Activate my teams</button>
+                            </div>
+                            <div v-else>
+                                Please wait {{ pleaseWait }}
+                            </div>
                         </div>
                         <div v-else>
-                            Please wait
+                            Use 'Choose teams' to select valid teams.
                         </div>
-                    </div>
-                    <div v-else>
-                        To join Blackbox, you must activate at least one Competitive division team.
                     </div>
                 </div>
             </div>
-            <div>
-                Previous: <a href="#" @click.prevent="openModal('BLACKBOX_PREVIOUS_DRAW')">view</a>
+            <div v-else class="blackboxpaused">
+                Blackbox is currently offline.
             </div>
         </div>
     </div>
@@ -42,7 +50,9 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from 'vue-class-component';
-import { Blackbox, BlackboxMatch } from "../include/Interfaces";
+import GameFinderHelpers from "../include/GameFinderHelpers";
+import IBackendApi from "../include/IBackendApi";
+import { BlackboxConfig } from "../include/Interfaces";
 
 @Component({
     props: {
@@ -54,20 +64,22 @@ import { Blackbox, BlackboxMatch } from "../include/Interfaces";
             validator: function (blackbox) {
                 return typeof blackbox === 'object' || blackbox === null;
             }
-        }
-    },
-    watch: {
-        blackbox: function () {
-            // @ts-ignore: Property 'pleaseWait' does not exist on type 'Vue'.
-            return this.pleaseWait = false;
-        }
+        },
+        isDevMode: {
+            type: Boolean,
+            required: true
+        },
     },
 })
 export default class BlackboxComponent extends Vue {
-    public pleaseWait: boolean = false;
+    public pleaseWait: string | null = null;
+    public config: BlackboxConfig | null = null;
 
-    public openModal(name: string) {
-        this.$emit('open-modal', name, {});
+    private backendApi: IBackendApi;
+
+    public async mounted() {
+        this.backendApi = GameFinderHelpers.getBackendApi(this.$props.isDevMode);
+        this.config = await this.backendApi.blackboxConfig();
     }
 
     public get userActivated(): boolean {
@@ -75,13 +87,39 @@ export default class BlackboxComponent extends Vue {
     }
 
     public handleActivation() {
-        this.pleaseWait = true;
-        this.$emit('blackbox-activation', true);
+        this.pleaseWait = ' activation in progress.';
+        setTimeout(() => { this.pleaseWait = null; }, 3000);
+        this.backendApi.blackboxActivate();
     }
 
     public handleDeactivation() {
-        this.pleaseWait = true;
-        this.$emit('blackbox-activation', false);
+        this.pleaseWait = ' deactivation in progress';
+        setTimeout(() => { this.pleaseWait = null; }, 3000);
+        this.backendApi.blackboxDeactivate();
+    }
+
+    public get zeroSecondsRemaining(): boolean {
+        return this.$props.blackbox.secondsRemaining === 0;
+    }
+
+    public get timeRemainingDisplay(): string {
+        if (this.zeroSecondsRemaining) {
+            return '';
+        }
+        const minutesRemaining = Math.ceil(this.$props.blackbox.secondsRemaining / 60);
+        if (minutesRemaining === 1) {
+            const approxSecondsRemaining = Math.ceil(this.$props.blackbox.secondsRemaining / 10) * 10;
+            return `${approxSecondsRemaining} ${GameFinderHelpers.pluralise(approxSecondsRemaining, 'second', 'seconds')}`;
+        }
+        return `${minutesRemaining} minute${GameFinderHelpers.pluralise(minutesRemaining, 'minute', 'minutes')}`;
+    }
+
+    public pluralise(quantity: number, singular: string, plural: string): string {
+        return GameFinderHelpers.pluralise(quantity, singular, plural);
+    }
+
+    public openModal(name: string, modalSettings: any) {
+        this.$emit('open-modal', name, modalSettings);
     }
 }
 </script>

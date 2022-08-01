@@ -14,6 +14,7 @@
             v-if="display === 'TEAMS' || display === 'TEAMS_ACTIVATING'"
             :is-dev-mode="isDevMode"
             :coach-name="coachName"
+            :blackbox-user-activated="blackboxUserActivated"
             @show-lfg="showLfg"
             @open-modal="openModal"></lfgteams>
 
@@ -93,58 +94,35 @@
                 </template>
             </div>
         </div>
-        <div id="blackboxmatchscheduled" class="basicbox" v-if="blackboxUserMatch">
-            <div class="header">Blackbox match scheduled</div>
-            <div class="content">
-                <div class="teams">
-                    <div class="details">
-                        <div class="homedetails">
-                            <div class="name">
-                                {{ blackboxUserMatch.home.name }}
-                            </div>
-                            <div class="coach">
-                                {{ blackboxUserMatch.home.coach.name }}
-                            </div>
-                            <div class="desc">
-                                TV {{ blackboxUserMatch.home.tv }} {{ blackboxUserMatch.home.roster.name }}
-                            </div>
-                        </div>
-                        <div class="awaydetails">
-                            <div class="name">
-                                {{ blackboxUserMatch.away.name }}
-                            </div>
-                            <div class="coach">
-                                {{ blackboxUserMatch.away.coach.name }}
-                            </div>
-                            <div class="desc">
-                                {{ blackboxUserMatch.away.roster.name }} TV {{ blackboxUserMatch.away.tv }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div>Other teams in draw: <a href="#" @click.prevent="openModal('BLACKBOX_PREVIOUS_DRAW', {})">view</a></div>
-            </div>
-        </div>
-        <div id="gamefindergrid" :class="{manyteamsgrid: me.teams.length > 4, fewteamsgrid: me.teams.length <= 4}" v-show="launchGameOffer === null && startDialogOffer === null && blackboxUserMatch === null && display === 'LFG'">
+        <div id="gamefindergrid" :class="{manyteamsgrid: me.teams.length > 4, fewteamsgrid: me.teams.length <= 4}" v-show="launchGameOffer === null && startDialogOffer === null && display === 'LFG'">
             <div class="overallstatus">
-                <span class="overallinfo">You have {{ me.teams.length }} team{{ me.teams.length === 1 ? '' : 's' }} looking for a game.</span>
+                <span class="overallinfo">
+                    <span v-if="blackboxUserActivated">
+                        Activated for Blackbox with {{ countBlackboxTeamsActivated }} {{ pluralise(countBlackboxTeamsActivated, 'team', 'teams') }}
+                        ({{ me.teams.length }} {{ pluralise(me.teams.length, 'team', 'teams') }} total).
+                    </span>
+                    <span v-else>
+                        You have {{ me.teams.length }} {{ pluralise(me.teams.length, 'team', 'teams') }} looking for a game.
+                    </span>
+                </span>
                 <a class="chooseteamslink" href="#" @click.prevent="showTeams">Choose teams</a>
                 <a class="settingslink" href="#" @click.prevent="openModal('SETTINGS', {})">Settings</a>
             </div>
             <teamcards
                 :selected-own-team-id="selectedOwnTeam ? selectedOwnTeam.id : 0"
                 :my-teams="me.teams"
-                :blackbox-activated="blackboxUserActivated"
+                :blackbox-user-activated="blackboxUserActivated"
                 @select="selectTeam"></teamcards>
             <div id="offers">
                 <blackbox
                     v-if="featureFlags.blackbox"
+                    :is-dev-mode="isDevMode"
                     :has-blackbox-teams-activated="hasBlackboxTeamsActivated"
                     :blackbox="matchesAndTeamsState.blackbox"
-                    @blackbox-activation="handleBlackboxActivation"
                     @open-modal="openModal"></blackbox>
 
                 <offers
+                    v-show="!isLockedForBlackboxDraw"
                     :is-dev-mode="isDevMode"
                     :matches="matchesAndTeamsState.matches"
                     :matches-last-updated="matchesAndTeamsStateLastUpdated"
@@ -165,11 +143,12 @@
                 <selectedownteam
                     :team="selectedOwnTeam"
                     :teamSettingsEnabled="featureFlags.teamSettings"
-                    :blackbox-activated="blackboxUserActivated"
+                    :blackbox-user-activated="blackboxUserActivated"
                     @deselect-team="deselectTeam"
                     @open-modal="openModal"></selectedownteam>
 
                 <opponents
+                    v-show="!isLockedForBlackboxDraw"
                     :is-dev-mode="isDevMode"
                     :coach-name="coachName"
                     :matches-and-teams-state="matchesAndTeamsState"
@@ -199,7 +178,10 @@
             @user-settings-changed="handleUserSettingsChanged"
             @close-modal="closeModal"></settings>
 
-        <teamsettings :team="modalTeamSettingsTeam" @close-modal="closeModal"></teamsettings>
+        <teamsettings
+            :is-dev-mode="isDevMode"
+            :team="modalTeamSettingsTeam"
+            @close-modal="closeModal"></teamsettings>
 
         <blackboxpreviousdraw
             :is-open="modalBlackboxPreviousDraw"
@@ -234,7 +216,7 @@ import BackendVersionRefreshComponent from "./components/BackendVersionRefresh.v
 import BlackboxPreviousDrawComponent from "./components/BlackboxPreviousDraw.vue";
 import IBackendApi from "./include/IBackendApi";
 import GameFinderHelpers from "./include/GameFinderHelpers";
-import { Blackbox, BlackboxMatch, Coach, UserSettings } from "./include/Interfaces";
+import { Blackbox, Coach, UserSettings } from "./include/Interfaces";
 import { AxiosError } from "axios";
 
 @Component({
@@ -751,7 +733,7 @@ export default class GameFinder extends Vue {
             this.modalTeamSettingsTeam = modalSettings.team;
         } else if (modalName === 'SETTINGS') {
             this.modalSettingsShow = true;
-        } else if (modalName === 'BLACKBOX_PREVIOUS_DRAW') {
+        } else if (modalName === 'BLACKBOX_ROUNDS') {
             this.modalBlackboxPreviousDraw = true;
         }
     }
@@ -819,17 +801,12 @@ export default class GameFinder extends Vue {
         await this.getState();
     }
 
-    public handleBlackboxActivation(isActivated: boolean): void {
-        if (isActivated) {
-            this.backendApi.blackboxActivate();
-        } else {
-            this.backendApi.blackboxDeactivate();
-        }
+    public get countBlackboxTeamsActivated(): number {
+        return this.me.teams.filter(GameFinderPolicies.teamCanJoinBlackboxDraw).length
     }
 
     public get hasBlackboxTeamsActivated(): boolean {
-        // this is just for demo, doesn't take account of team mode, or tournaments, probably other things too.
-        return this.me.teams.filter(GameFinderPolicies.teamIsCompetitiveDivision).length > 0;
+        return this.countBlackboxTeamsActivated > 0;
     }
 
     public get blackboxUserActivated(): boolean {
@@ -837,15 +814,15 @@ export default class GameFinder extends Vue {
             return false;
         }
 
-        return this.matchesAndTeamsState.blackbox.userActivated;
+        return this.matchesAndTeamsState.blackbox.status === 'Active' && this.matchesAndTeamsState.blackbox.userActivated;
     }
 
-    public get blackboxUserMatch(): BlackboxMatch | null {
-        if (this.matchesAndTeamsState.blackbox === null) {
-            return null;
-        }
+    public get isLockedForBlackboxDraw(): boolean {
+        return this.blackboxUserActivated && this.matchesAndTeamsState.blackbox.secondsRemaining <= 30;
+    }
 
-        return this.matchesAndTeamsState.blackbox.previous.userMatch;
+    public pluralise(quantity: number, singular: string, plural: string): string {
+        return GameFinderHelpers.pluralise(quantity, singular, plural);
     }
 }
 </script>

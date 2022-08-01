@@ -15,7 +15,9 @@ export interface UserSettings {
 // e.g. = 'gamefinder.var1' | 'gamefinder.var2' | 'gamefinder.var3'
 export type GameFinderVar = 'gamefinder.enableSound' | 'gamefinder.zenMode' | 'gamefinder.showUnofferableTeams';
 
-export type BlackboxStatus = 'ACTIVE' | 'PAUSED' | 'OFFLINE';
+export type LfgMode = 'Strict' | 'Mixed' | 'Open';
+
+export type BlackboxStatus = 'Active' | 'Paused' | 'Offline';
 
 export interface BlackboxTeam {
     name: string,
@@ -28,6 +30,11 @@ export interface BlackboxTeam {
     },
 };
 
+export interface BlackboxConfig {
+  pauseDuration: number,
+  activeDuration: number,
+}
+
 export interface BlackboxMatch {
   home: BlackboxTeam,
   away: BlackboxTeam,
@@ -38,13 +45,4 @@ export interface Blackbox {
   status: BlackboxStatus,
   secondsRemaining: number,
   coachCount: number,
-  config: {
-    pauseDuration: number,
-    activeDuration: number,
-  },
-  previous: {
-    userMatch: BlackboxMatch | null,
-    time: string,
-    matches: BlackboxMatch[],
-  },
 };

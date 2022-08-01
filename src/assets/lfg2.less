@@ -96,6 +96,11 @@
       overflow: initial;
       padding: 0;
 
+      .blackboxwarning {
+        font-size: 14pt;
+        padding: 10px 0 0 6px;
+      }
+
       .lfglist > div {
         display: contents;
 
@@ -377,6 +382,30 @@
       line-height: 20px;
       padding-right: 2px;
 
+      &.blackboxuseractivated {
+        .card {
+          cursor: default;
+          &.highlight {
+            border-color: gold;
+            &:hover {
+              background-color: @OldLace; // cancel hover effect when locked for blackbox
+              border-color: gold; // cancel hover effect when locked for blackbox
+            }
+          }
+
+          &.lowlight {
+            opacity: 0.3;
+            &:hover {
+              border-color: @Eggshell; // cancel hover effect when locked for blackbox
+            }
+          }
+
+          .opponentcount, .new {
+            display: none;
+          }
+        }
+      }
+
       .card {
         line-height: 1em;
         height: 42px;
@@ -401,14 +430,6 @@
 
         &:hover {
           border-color: @Carmine;
-        }
-
-        &.highlight {
-          border-color: gold;
-        }
-
-        &.lowlight {
-          opacity: 0.3;
         }
 
         .logo {
@@ -596,29 +617,34 @@
   }
 
   #blackboxwrapper {
+    font-size: 9pt;
+    position: relative;
+    a.blackboxrounds {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+    }
     .blackboxpaused {
       display: flex;
       flex-direction: column;
       height: 90px;
-      .pausedtop {
+      .blackboxtop {
         flex-grow: 1;
         display: flex;
         align-items: center;
         justify-content: center;
       }
-      .pausedtimerwrapper {
+      .timerwrapper {
         flex-grow: 0;
         height: 3px;
         position: relative;
-        .pausedtimer {
+        .timer {
           position: absolute;
           height: 3px;
           background: @brightGreen;
-          // transition: width 1s;
-          // transition-timing-function: linear;
         }
       }
-      .pausedbottom {
+      .blackboxbottom {
         flex-grow: 1;
         display: flex;
         align-items: center;
@@ -630,35 +656,39 @@
       display: flex;
       flex-direction: column;
       height: 90px;
-      .pausedtop {
+      .blackboxtop {
         flex-grow: 1;
         display: flex;
         align-items: center;
         justify-content: center;
+        height: 42px;
       }
-      .pausedtimerwrapper {
+      .timerwrapper {
         flex-grow: 0;
         height: 3px;
         position: relative;
-        .pausedtimer {
+        .timer {
           position: absolute;
           height: 3px;
           background: @brightGreen;
-          // transition: width 1s;
-          // transition-timing-function: linear;
         }
       }
-      .pausedbottom {
+      .blackboxbottom {
         flex-grow: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        .activationcontrols {
+        height: 42px;
+        .timeremaining {
+          margin: 5px 0 5px 0;
+          text-align: center;
+        }
+        .activationcontrolsouter {
           display: flex;
-          flex-direction: column;
           align-items: center;
-          input[type=checkbox] {
-            transform: scale(1.3);
+          justify-content: center;
+          .activationcontrolsinner {
+            align-items: center;
+            button {
+              font-size: 9pt;
+            }
           }
         }
       }

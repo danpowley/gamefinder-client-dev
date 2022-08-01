@@ -20,15 +20,15 @@
                     play via Gamefinder.
                 </div>
                 <div class="currentmode">
-                    <div>Current team mode: <strong>{{ team.mode.current }}</strong></div>
+                    <div>Current team mode: <strong>{{ team.lfgMode }}</strong></div>
                     <div><a href="#" @click.prevent="changeTeamModeChoices(true)" v-if="!showTeamModeChoices">Change mode</a></div>
                 </div>
                 <div v-show="showTeamModeChoices">
                     <div><label for="newmodechoice">Available team modes:</label></div>
                     <div id="newmodechoice" class="newmodechoice">
                         <select v-model="newModeChoice">
-                            <option value="">Please choose</option>
-                            <option v-for="mode in team.mode.available" :key="mode" :value="mode">{{ mode }}</option>
+                            <option value="" selected>Please choose</option>
+                            <option v-for="mode in ['Mixed', 'Open', 'Strict']" :key="mode" :value="mode">{{ mode }}</option>
                         </select>
                         <a href="#" @click.prevent="confirmChangeTeamMode()" class="confirm">Confirm</a>
                         <a href="#" @click.prevent="changeTeamModeChoices(false)">Cancel</a>
@@ -44,9 +44,15 @@
 import Vue from "vue";
 import Component from 'vue-class-component';
 import GameFinderHelpers from "../include/GameFinderHelpers";
+import IBackendApi from "../include/IBackendApi";
+import { LfgMode } from "../include/Interfaces";
 
 @Component({
     props: {
+        isDevMode: {
+            type: Boolean,
+            required: true
+        },
         team: {
             validator: function (teamId) {
                 return typeof teamId === 'object' || teamId === null;
@@ -61,10 +67,15 @@ import GameFinderHelpers from "../include/GameFinderHelpers";
     }
 })
 export default class TeamSettingsComponent extends Vue {
+    private backendApi: IBackendApi | null = null;
     public showTeamModeChoices: boolean = false;
-    public newModeChoice: string = '';
+    public newModeChoice: LfgMode | '' = '';
     public showModeChoiceError: boolean = false;
     public useSectionClasses: boolean = false; // when more than 1 section, remove this so sections can be distinguised by CSS class
+
+    async mounted() {
+        this.backendApi = GameFinderHelpers.getBackendApi(this.$props.isDevMode);
+    }
 
     public close() {
         this.$emit('close-modal');
@@ -88,21 +99,14 @@ export default class TeamSettingsComponent extends Vue {
         this.showModeChoiceError = false;
     }
 
-    public confirmChangeTeamMode() {
+    public async confirmChangeTeamMode() {
         if (this.newModeChoice === '') {
             this.showModeChoiceError = true;
             return;
         }
-        const availableChoices = {
-            'Strict': ['Mixed', 'Open'],
-            'Mixed': ['Strict', 'Open'],
-            'Open': ['Mixed', 'Strict'],
-        };
-        const newAvailableChoices = availableChoices[this.newModeChoice];
-        this.$props.team.mode = {
-            current: this.newModeChoice,
-            available: newAvailableChoices,
-        };
+        await this.backendApi.changeLfgMode(this.$props.team.id, this.newModeChoice);
+        this.$props.team.lfgMode = this.newModeChoice;
+
         this.changeTeamModeChoices(false);
     }
 }

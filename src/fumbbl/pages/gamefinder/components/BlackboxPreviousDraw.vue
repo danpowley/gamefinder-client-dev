@@ -2,11 +2,9 @@
     <div v-if="isOpen" class="blackboxpreviousdrawouter">
         <div class="blackboxpreviousdrawinner">
             <a href="#" class="closemodal" @click.prevent="close">&times;</a>
-            <div>Draw at: {{ blackbox.previous.time }}</div>
-            <hr>
-            TODO: formatting!
-            <hr>
-            <div v-for="match in blackbox.previous.matches" :key="match.home.coach.name + match.away.coach.name">
+            <div style="font-size: 14pt;">Under construction</div>
+            <div>In the near future this will display details of recent Blackbox rounds.</div>
+            <div v-for="match in fakeMatches" :key="match.home.coach.name + match.away.coach.name">
                 <div class="details">
                     <div class="homedetails">
                         <div class="name">
@@ -41,6 +39,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from 'vue-class-component';
+import { BlackboxMatch } from "../include/Interfaces";
 
 @Component({
     props: {
@@ -56,8 +55,60 @@ import Component from 'vue-class-component';
     },
 })
 export default class BlackboxPreviousDrawComponent extends Vue {
+    public fakeMatches: BlackboxMatch[] = [];
+
     public close() {
         this.$emit('close-modal');
+    }
+
+    public mounted() {
+        this.fakeMatches =  [
+            {
+              home: {
+                  name: 'Team Raspberry £',
+                  coach: {
+                      name: 'Coach A'
+                  },
+                  tv: 1000000,
+                  roster: {
+                      name: 'Skaven'
+                  },
+              },
+              away: {
+                  name: 'Team Grape $',
+                  coach: {
+                      name: 'Coach B',
+                  },
+                  tv: 1000000,
+                  roster: {
+                      name: 'Snotling',
+                  },
+              },
+            },
+            {
+              home: {
+                  name: 'Team Orange *',
+                  coach: {
+                      name: 'Coach C'
+                  },
+                  tv: 1000000,
+                  roster: {
+                      name: 'Slann'
+                  },
+              },
+              away: {
+                  name: 'Team Kiwi +',
+                  coach: {
+                      name: 'Coach D',
+                  },
+                  tv: 1000000,
+                  roster: {
+                      name: 'Halfling',
+                  },
+              },
+            }
+        ];
+        this.fakeMatches = [];
     }
 }
 </script>

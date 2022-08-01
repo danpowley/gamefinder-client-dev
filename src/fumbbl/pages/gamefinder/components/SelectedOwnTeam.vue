@@ -1,7 +1,11 @@
 <template>
     <div id="selectedownteam">
-        <template v-if="blackboxActivated">
-            You are currently activated to join the next Blackbox round, you can no longer filter by team above, but you can continue to browse available opponents. If you accept any offers you'll be removed from the Blackbox draw.
+        <template v-if="blackboxUserActivated">
+            <div>
+                <div>
+                    You are activated to join the next Blackbox round. You can still send and receive Gamefinder offers up until 30 seconds before the draw.
+                </div>
+            </div>
         </template>
         <template v-else-if="team">
             <div class="logo">
@@ -43,7 +47,7 @@ import GameFinderHelpers from '../include/GameFinderHelpers';
             type: Boolean,
             required: true
         },
-        blackboxActivated: {
+        blackboxUserActivated: {
             type: Boolean,
             required: true
         }
