@@ -1,6 +1,6 @@
 <template>
     <div class="basicbox" v-if="blackbox !== null">
-        <div class="header blackboxheader">Blackbox<span class="blackboxstatus">{{ blackbox.status }}</span></div>
+        <div class="header blackboxheader">Blackbox [BETA TESTING]<span class="blackboxstatus">{{ blackbox.status }}</span></div>
         <div class="content" id="blackboxwrapper">
             <a href="#" @click.prevent="openModal('BLACKBOX_ROUNDS')" class="blackboxrounds">Rounds</a>
             <div v-if="zeroSecondsRemaining" class="blackboxpaused">
