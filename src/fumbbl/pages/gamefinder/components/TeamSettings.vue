@@ -28,7 +28,7 @@
                     <div id="newmodechoice" class="newmodechoice">
                         <select v-model="newModeChoice">
                             <option value="" selected>Please choose</option>
-                            <option v-for="mode in ['Mixed', 'Open', 'Strict']" :key="mode" :value="mode">{{ mode }}</option>
+                            <option v-for="mode in ['Strict', 'Mixed', 'Open']" :key="mode" :value="mode">{{ mode }}</option>
                         </select>
                         <a href="#" @click.prevent="confirmChangeTeamMode()" class="confirm">Confirm</a>
                         <a href="#" @click.prevent="changeTeamModeChoices(false)">Cancel</a>
