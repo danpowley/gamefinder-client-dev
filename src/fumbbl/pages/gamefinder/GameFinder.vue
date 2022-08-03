@@ -122,8 +122,8 @@
                     @open-modal="openModal"></blackbox>
 
                 <offers
-                    v-show="!isLockedForBlackboxDraw"
                     :is-dev-mode="isDevMode"
+                    :fade-out="isLockedForBlackboxDraw"
                     :matches="matchesAndTeamsState.matches"
                     :matches-last-updated="matchesAndTeamsStateLastUpdated"
                     :offers="offers"
@@ -149,8 +149,8 @@
                     @open-modal="openModal"></selectedownteam>
 
                 <opponents
-                    v-show="!isLockedForBlackboxDraw"
                     :is-dev-mode="isDevMode"
+                    :fade-out="isLockedForBlackboxDraw"
                     :coach-name="coachName"
                     :matches-and-teams-state="matchesAndTeamsState"
                     :matches-and-teams-state-last-updated="matchesAndTeamsStateLastUpdated"

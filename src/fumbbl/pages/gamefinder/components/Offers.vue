@@ -1,5 +1,5 @@
 <template>
-    <div class="basicbox">
+    <div class="basicbox" :class="{fadeout: fadeOut}">
         <div class="header">Match Offers<div v-show="additionalOffers > 0" class="additionaloffers">Additional offers: {{ additionalOffers }}</div></div>
         <div class="content" id="offerlistwrapper" @mouseenter="setUiUpdatesPaused(true)" @mouseleave="setUiUpdatesPaused(false)">
             <div v-show="offers.length === 0" class="nooffers">Sorry, no current offers.</div>
@@ -54,6 +54,10 @@ import GameFinderHelpers from "../include/GameFinderHelpers";
 @Component({
     props: {
         isDevMode: {
+            type: Boolean,
+            required: true
+        },
+        fadeOut: {
             type: Boolean,
             required: true
         },
