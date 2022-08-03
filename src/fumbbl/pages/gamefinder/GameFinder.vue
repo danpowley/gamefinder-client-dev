@@ -98,7 +98,7 @@
             <div class="overallstatus">
                 <span class="overallinfo">
                     <span v-if="blackboxUserActivated">
-                        Activated for Blackbox with {{ countBlackboxTeamsActivated }} {{ pluralise(countBlackboxTeamsActivated, 'team', 'teams') }}
+                        Activated for Blackbox with {{ blackboxTeamCount }} {{ pluralise(blackboxTeamCount, 'team', 'teams') }}
                         ({{ me.teams.length }} {{ pluralise(me.teams.length, 'team', 'teams') }} total).
                     </span>
                     <span v-else>
@@ -117,7 +117,7 @@
                 <blackbox
                     v-if="featureFlags.blackbox"
                     :is-dev-mode="isDevMode"
-                    :has-blackbox-teams-activated="hasBlackboxTeamsActivated"
+                    :blackbox-team-count="blackboxTeamCount"
                     :blackbox="matchesAndTeamsState.blackbox"
                     @open-modal="openModal"></blackbox>
 
@@ -801,12 +801,8 @@ export default class GameFinder extends Vue {
         await this.getState();
     }
 
-    public get countBlackboxTeamsActivated(): number {
+    public get blackboxTeamCount(): number {
         return this.me.teams.filter(GameFinderPolicies.teamCanJoinBlackboxDraw).length
-    }
-
-    public get hasBlackboxTeamsActivated(): boolean {
-        return this.countBlackboxTeamsActivated > 0;
     }
 
     public get blackboxUserActivated(): boolean {
