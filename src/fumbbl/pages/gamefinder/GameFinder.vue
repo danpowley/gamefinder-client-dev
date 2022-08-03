@@ -144,6 +144,7 @@
                     :team="selectedOwnTeam"
                     :teamSettingsEnabled="featureFlags.teamSettings"
                     :blackbox-user-activated="blackboxUserActivated"
+                    :is-locked-for-blackbox-draw="isLockedForBlackboxDraw"
                     @deselect-team="deselectTeam"
                     @open-modal="openModal"></selectedownteam>
 
