@@ -168,6 +168,7 @@ export default class OffersComponent extends Vue {
 
             if (offer.clientId && offer.clientId !== 0) {
                 downloadJnlpOffer = offerCreated;
+                downloadJnlpOffer.isBlackbox = offer.clientId === -1; // Blackbox offers always have a clientId of -1
             }
 
             if (offer.schedulingError) {

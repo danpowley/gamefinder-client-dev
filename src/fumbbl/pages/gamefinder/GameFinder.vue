@@ -85,6 +85,40 @@
                     </template>
                 </template>
                 <template v-else>
+                    <template v-if="launchGameOffer && downloadJnlpOffer && downloadJnlpOffer.isBlackbox">
+                        <div class="blackboxmatch">
+                            <div class="homeicon">
+                                <img :src="getLargeTeamLogoUrl(launchGameOffer.home)" />
+                            </div>
+                            <div class="details">
+                                <div class="homedetails">
+                                    <div class="name">
+                                        {{ launchGameOffer.home.team }}
+                                    </div>
+                                    <div class="coach">
+                                        {{ launchGameOffer.home.coach.name }} ({{ launchGameOffer.home.coach.rating }})
+                                    </div>
+                                    <div class="desc">
+                                        TV {{ launchGameOffer.home.tv }} {{ launchGameOffer.home.roster.name }}
+                                    </div>
+                                </div>
+                                <div class="awaydetails">
+                                    <div class="name">
+                                        {{ launchGameOffer.away.team }}
+                                    </div>
+                                    <div class="coach">
+                                        {{ launchGameOffer.away.coach.name }} ({{ launchGameOffer.away.coach.rating }})
+                                    </div>
+                                    <div class="desc">
+                                        {{ launchGameOffer.away.roster.name }} TV {{ launchGameOffer.away.tv }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="awayicon">
+                                <img :src="getLargeTeamLogoUrl(launchGameOffer.away)" />
+                            </div>
+                        </div>
+                    </template>
                     Good luck, your download should start automatically (you can also join from your coach home page).
                     <iframe :src="downloadJnlpOffer ? `https://fumbbl.com/ffblive.jnlp?id=${downloadJnlpOffer.home.id}` : ''" height="0" width="0" />
                     <div v-if="allowRejoinAfterDownload">
