@@ -674,6 +674,7 @@ export default class GameFinder extends Vue {
     public handleLaunchGame(launchGameOffer: any | null): void {
         if (launchGameOffer !== null) {
             this.launchGameOffer = launchGameOffer;
+            this.backendApi.blackboxDeactivate();
         }
     }
 
