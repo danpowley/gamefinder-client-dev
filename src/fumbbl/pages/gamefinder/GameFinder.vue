@@ -18,7 +18,7 @@
             @show-lfg="showLfg"
             @open-modal="openModal"></lfgteams>
 
-        <div id="startdialog" class="basicbox" v-if="startDialogOffer !== null">
+        <div id="startdialog" class="basicbox" v-if="startDialogOffer !== null && !isLockedForBlackboxDraw">
             <div class="header">Game offered</div>
             <div class="content">
                 <div class="teams">
