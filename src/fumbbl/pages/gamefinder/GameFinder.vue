@@ -224,7 +224,6 @@
         <blackboxroundhistory
             :is-dev-mode="isDevMode"
             v-if="modalBlackboxPreviousDraw"
-            :blackbox="matchesAndTeamsState.blackbox"
             @close-modal="closeModal"></blackboxroundhistory>
 
         <stateupdatespaused
