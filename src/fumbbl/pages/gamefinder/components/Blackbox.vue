@@ -49,6 +49,9 @@
                 Blackbox is currently offline.
             </div>
         </div>
+        <div class="blackboxtrophy">
+            <a href="/p/boxtrophy">Blackbox Trophy</a>
+        </div>
     </div>
 </template>
 
