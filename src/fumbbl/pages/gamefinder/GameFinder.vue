@@ -118,6 +118,9 @@
                                 <img :src="getLargeTeamLogoUrl(launchGameOffer.away)" />
                             </div>
                         </div>
+                        <div class="viewallrounds">
+                            <a href="#" @click.prevent="openModal('BLACKBOX_ROUNDS')">View Blackbox rounds</a>
+                        </div>
                     </template>
                     Good luck, your download should start automatically (you can also join from your coach home page).
                     <iframe :src="downloadJnlpOffer ? `https://fumbbl.com/ffblive.jnlp?id=${downloadJnlpOffer.home.id}` : ''" height="0" width="0" />
@@ -220,7 +223,7 @@
 
         <blackboxroundhistory
             :is-dev-mode="isDevMode"
-            :is-open="modalBlackboxPreviousDraw"
+            v-if="modalBlackboxPreviousDraw"
             :blackbox="matchesAndTeamsState.blackbox"
             @close-modal="closeModal"></blackboxroundhistory>
 
