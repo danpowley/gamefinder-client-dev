@@ -218,10 +218,11 @@
             :team="modalTeamSettingsTeam"
             @close-modal="closeModal"></teamsettings>
 
-        <blackboxpreviousdraw
+        <blackboxroundhistory
+            :is-dev-mode="isDevMode"
             :is-open="modalBlackboxPreviousDraw"
             :blackbox="matchesAndTeamsState.blackbox"
-            @close-modal="closeModal"></blackboxpreviousdraw>
+            @close-modal="closeModal"></blackboxroundhistory>
 
         <stateupdatespaused
             :paused="stateUpdatesArePaused && !backendVersionRequiresRefresh"
@@ -248,7 +249,7 @@ import OffersComponent from "./components/Offers.vue";
 import OpponentsComponent from "./components/Opponents.vue";
 import StateUpdatesPausedComponent from "./components/StateUpdatesPaused.vue";
 import BackendVersionRefreshComponent from "./components/BackendVersionRefresh.vue";
-import BlackboxPreviousDrawComponent from "./components/BlackboxPreviousDraw.vue";
+import BlackboxRoundHistoryComponent from "./components/BlackboxRoundHistory.vue";
 import IBackendApi from "./include/IBackendApi";
 import GameFinderHelpers from "./include/GameFinderHelpers";
 import { Blackbox, Coach, UserSettings } from "./include/Interfaces";
@@ -267,7 +268,7 @@ import { AxiosError } from "axios";
         'opponents': OpponentsComponent,
         'stateupdatespaused': StateUpdatesPausedComponent,
         'backendversionrefresh': BackendVersionRefreshComponent,
-        'blackboxpreviousdraw': BlackboxPreviousDrawComponent,
+        'blackboxroundhistory': BlackboxRoundHistoryComponent,
     }
 })
 export default class GameFinder extends Vue {
@@ -754,7 +755,7 @@ export default class GameFinder extends Vue {
     private onOuterModalClick(e) {
         const clickTarget = e.target;
         const modals = [
-            document.querySelector('.rosterouter, .settingsouter, .teamsettingsouter, .blackboxpreviousdrawouter'),
+            document.querySelector('.rosterouter, .settingsouter, .teamsettingsouter, .blackboxroundhistoryouter'),
         ];
         for (const modal of modals) {
             if (clickTarget == modal) {

@@ -1,9 +1,7 @@
 <template>
-    <div v-if="isOpen" class="blackboxpreviousdrawouter">
-        <div class="blackboxpreviousdrawinner">
+    <div v-if="isOpen" class="blackboxroundhistoryouter">
+        <div class="blackboxroundhistoryinner">
             <a href="#" class="closemodal" @click.prevent="close">&times;</a>
-            <div style="font-size: 14pt;">Under construction</div>
-            <div>In the near future this will display details of recent Blackbox rounds.</div>
             <div v-for="match in fakeMatches" :key="match.home.coach.name + match.away.coach.name">
                 <div class="details">
                     <div class="homedetails">
@@ -54,7 +52,7 @@ import { BlackboxMatch } from "../include/Interfaces";
         }
     },
 })
-export default class BlackboxPreviousDrawComponent extends Vue {
+export default class BlackboxRoundHistoryComponent extends Vue {
     public fakeMatches: BlackboxMatch[] = [];
 
     public close() {
@@ -108,7 +106,6 @@ export default class BlackboxPreviousDrawComponent extends Vue {
               },
             }
         ];
-        this.fakeMatches = [];
     }
 }
 </script>
