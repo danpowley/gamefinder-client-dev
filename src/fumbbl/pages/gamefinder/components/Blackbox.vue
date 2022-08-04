@@ -36,7 +36,7 @@
                         </div>
                         <div v-else>
                             <template v-if="userActivated">
-                                <strong>0 teams:</strong> 'Choose teams' or <a href="#" @click.prevent="handleDeactivation">deactivate</a>.
+                                <strong>0 teams:</strong> 'Choose teams' or <a href="#" @click.prevent="handleDeactivation">leave draw</a>.
                             </template>
                             <template v-else>
                                 Use 'Choose teams' to select valid teams.
