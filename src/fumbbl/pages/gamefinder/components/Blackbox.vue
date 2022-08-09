@@ -2,7 +2,7 @@
     <div class="basicbox" v-if="blackbox !== null">
         <div class="header blackboxheader">Blackbox<span class="blackboxstatus">{{ blackbox.status }}</span></div>
         <div class="content" id="blackboxwrapper">
-            <a href="#" @click.prevent="openModal('BLACKBOX_ROUNDS')" class="blackboxrounds">Rounds</a>
+            <a href="#" @click.prevent="openModal('BLACKBOX_ROUNDS')" class="blackboxrounds">{{ lastRoundGameCount.count }} {{ pluralise(lastRoundGameCount.count, 'match', 'matches') }} at {{ lastRoundGameCount.round }}</a>
             <div v-if="zeroSecondsRemaining" class="blackboxpaused">
                 Please wait...
             </div>
@@ -73,6 +73,11 @@ import { BlackboxConfig } from "../include/Interfaces";
                 return typeof blackbox === 'object' || blackbox === null;
             }
         },
+        lastRoundGameCount: {
+            validator: function (lastRoundGameCount) {
+                return typeof lastRoundGameCount === 'object';
+            }
+        },
         isDevMode: {
             type: Boolean,
             required: true
@@ -98,12 +103,14 @@ export default class BlackboxComponent extends Vue {
         this.pleaseWait = ' activation in progress.';
         setTimeout(() => { this.pleaseWait = null; }, 3000);
         this.backendApi.blackboxActivate();
+        this.$emit('activated');
     }
 
     public handleDeactivation() {
         this.pleaseWait = ' deactivation in progress';
         setTimeout(() => { this.pleaseWait = null; }, 3000);
         this.backendApi.blackboxDeactivate();
+        this.$emit('deactivated');
     }
 
     public get zeroSecondsRemaining(): boolean {

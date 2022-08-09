@@ -1,20 +1,6 @@
 <template>
-    <div id="selectedownteam">
-        <template v-if="isLockedForBlackboxDraw">
-            <div>
-                <div>
-                    You are activated to join the next Blackbox round. The draw is taking place very soon, no more offers can be sent / received.
-                </div>
-            </div>
-        </template>
-        <template v-else-if="blackboxUserActivated">
-            <div>
-                <div>
-                    You are activated to join the next Blackbox round. You can still send and receive Gamefinder offers up until 30 seconds before the draw.
-                </div>
-            </div>
-        </template>
-        <template v-else-if="team">
+    <div id="selectedownteam" :class="{fadeout: fadeOut}">
+        <template v-if="team">
             <div class="logo">
                 <img :src="getTeamLogoUrl(team)" />
             </div>
@@ -54,11 +40,7 @@ import GameFinderHelpers from '../include/GameFinderHelpers';
             type: Boolean,
             required: true
         },
-        blackboxUserActivated: {
-            type: Boolean,
-            required: true
-        },
-        isLockedForBlackboxDraw: {
+        fadeOut: {
             type: Boolean,
             required: true
         },

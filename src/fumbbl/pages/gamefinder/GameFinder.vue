@@ -156,6 +156,9 @@
                     :is-dev-mode="isDevMode"
                     :blackbox-team-count="blackboxTeamCount"
                     :blackbox="matchesAndTeamsState.blackbox"
+                    :last-round-game-count="lastBlackboxRoundGameCount"
+                    @activated="handleBlackboxActivation"
+                    @deactivated="handleBlackboxDeactivation"
                     @open-modal="openModal"></blackbox>
 
                 <offers
@@ -177,11 +180,16 @@
                     @scheduling-error="handleSchedulingError"></offers>
             </div>
             <div id="opponents">
+                <blackboxjoiningdraw
+                    v-show="isLockedForBlackboxDraw"
+                    :raw-round-history="rawBlackboxRoundHistory"
+                    :seconds-remaining="getBlackboxActiveSecondsRemaining"
+                    @close="handleCloseBlackboxJoiningDraw"></blackboxjoiningdraw>
+
                 <selectedownteam
                     :team="selectedOwnTeam"
                     :teamSettingsEnabled="featureFlags.teamSettings"
-                    :blackbox-user-activated="blackboxUserActivated"
-                    :is-locked-for-blackbox-draw="isLockedForBlackboxDraw"
+                    :fade-out="isLockedForBlackboxDraw"
                     @deselect-team="deselectTeam"
                     @open-modal="openModal"></selectedownteam>
 
@@ -221,10 +229,10 @@
             :team="modalTeamSettingsTeam"
             @close-modal="closeModal"></teamsettings>
 
-        <blackboxroundhistory
-            :is-dev-mode="isDevMode"
-            v-if="modalBlackboxRoundHistory"
-            @close-modal="closeModal"></blackboxroundhistory>
+        <blackboxroundhistorymodal
+            :is-open="modalBlackboxRoundHistory"
+            :raw-round-history="rawBlackboxRoundHistory"
+            @close-modal="closeModal"></blackboxroundhistorymodal>
 
         <stateupdatespaused
             :paused="stateUpdatesArePaused && !backendVersionRequiresRefresh"
@@ -251,7 +259,8 @@ import OffersComponent from "./components/Offers.vue";
 import OpponentsComponent from "./components/Opponents.vue";
 import StateUpdatesPausedComponent from "./components/StateUpdatesPaused.vue";
 import BackendVersionRefreshComponent from "./components/BackendVersionRefresh.vue";
-import BlackboxRoundHistoryComponent from "./components/BlackboxRoundHistory.vue";
+import BlackboxJoiningDrawComponent from "./components/BlackboxJoiningDraw.vue";
+import BlackboxRoundHistoryModalComponent from "./components/BlackboxRoundHistoryModal.vue";
 import IBackendApi from "./include/IBackendApi";
 import GameFinderHelpers from "./include/GameFinderHelpers";
 import { Blackbox, Coach, UserSettings } from "./include/Interfaces";
@@ -270,7 +279,21 @@ import { AxiosError } from "axios";
         'opponents': OpponentsComponent,
         'stateupdatespaused': StateUpdatesPausedComponent,
         'backendversionrefresh': BackendVersionRefreshComponent,
-        'blackboxroundhistory': BlackboxRoundHistoryComponent,
+        'blackboxjoiningdraw': BlackboxJoiningDrawComponent,
+        'blackboxroundhistorymodal': BlackboxRoundHistoryModalComponent,
+    },
+    watch: {
+        'matchesAndTeamsState.blackbox.status'(newVal, oldVal) {
+            if (newVal === 'Paused') {
+                // The UI displaying the current draw relies on this updating as soon as the new matches are known.
+                // @ts-ignore: Property 'refreshBlackboxRoundHistory' does not exist on type 'Vue'.
+                this.refreshBlackboxRoundHistory(true);
+            }
+            if (newVal === 'Active') {
+                // @ts-ignore: Property 'wasActivatedForMostRecentCompletedDraw' does not exist on type 'Vue'.
+                this.wasActivatedForMostRecentCompletedDraw = false;
+            }
+        },
     }
 })
 export default class GameFinder extends Vue {
@@ -309,6 +332,9 @@ export default class GameFinder extends Vue {
 
     public lastActiveTimestamp: number = 0;
 
+    public wasActivatedForMostRecentCompletedDraw: boolean = false;
+    public rawBlackboxRoundHistory: {lastUpdated: number, rawRounds: any[]} = {lastUpdated: 0, rawRounds: []};
+
     public modalRosterSettings: {isMyTeam: boolean, displayTeam: any, ownTeamsOfferable: any[]} | null = null;
     public modalTeamSettingsTeam: any | null = null;
     public modalSettingsShow: boolean = false;
@@ -335,6 +361,8 @@ export default class GameFinder extends Vue {
         document.getElementById("gamefinder").addEventListener('click', this.updateLastActiveTimestamp);
 
         this.beginGetStatePolling();
+
+        this.refreshBlackboxRoundHistory(false);
     }
 
     public updateLastActiveTimestamp() {
@@ -855,7 +883,60 @@ export default class GameFinder extends Vue {
     }
 
     public get isLockedForBlackboxDraw(): boolean {
-        return this.blackboxUserActivated && this.matchesAndTeamsState.blackbox.secondsRemaining <= 30;
+        if (this.matchesAndTeamsState.blackbox === null) {
+            return false;
+        }
+
+        const isActivatedJustBeforeDraw = this.blackboxUserActivated && this.matchesAndTeamsState.blackbox.secondsRemaining <= 30;
+        const wasActivatedForMostRecentCompletedDraw = this.wasActivatedForMostRecentCompletedDraw === true &&
+            (this.matchesAndTeamsState.blackbox.status === 'Pending' || this.matchesAndTeamsState.blackbox.status === 'Paused')
+
+        return isActivatedJustBeforeDraw || wasActivatedForMostRecentCompletedDraw;
+    }
+
+    public handleBlackboxActivation(): void {
+        this.wasActivatedForMostRecentCompletedDraw = true;
+    }
+
+    public handleBlackboxDeactivation(): void {
+        this.wasActivatedForMostRecentCompletedDraw = false;
+    }
+
+    public handleCloseBlackboxJoiningDraw(): void {
+        this.wasActivatedForMostRecentCompletedDraw = false;
+    }
+
+    public async refreshBlackboxRoundHistory(setNewLastUpdated: boolean) {
+        this.rawBlackboxRoundHistory = {
+            lastUpdated: setNewLastUpdated ? Date.now() : 0,
+            rawRounds: await this.backendApi.blackboxRoundHistory()
+        };
+    }
+
+    public get lastBlackboxRoundGameCount(): {round: string, count: number} {
+        if (this.rawBlackboxRoundHistory === null || this.rawBlackboxRoundHistory.rawRounds.length === 0) {
+            return {
+                round: '00:00',
+                count: 0,
+            };
+        }
+        let round = this.rawBlackboxRoundHistory.rawRounds[0].round;
+        round = round.slice(11, 16);
+        return {
+            round: round,
+            count: this.rawBlackboxRoundHistory.rawRounds[0].data.ScheduledMatches.length,
+        }
+    }
+
+    public get getBlackboxActiveSecondsRemaining(): number {
+        if (this.matchesAndTeamsState.blackbox === null) {
+            return 0;
+        }
+
+        if (this.matchesAndTeamsState.blackbox.status !== 'Active') {
+            return 0;
+        }
+        return this.matchesAndTeamsState.blackbox.secondsRemaining;
     }
 
     public pluralise(quantity: number, singular: string, plural: string): string {
