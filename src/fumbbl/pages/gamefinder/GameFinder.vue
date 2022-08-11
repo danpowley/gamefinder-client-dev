@@ -870,6 +870,7 @@ export default class GameFinder extends Vue {
 
         await this.activate();
         await this.getState();
+        this.stateUpdatesArePaused = false;
     }
 
     public blackboxReset() {
