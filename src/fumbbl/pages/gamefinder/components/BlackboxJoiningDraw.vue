@@ -1,19 +1,27 @@
 <template>
     <div class="blackboxjoiningdraw">
+        <div class="goodluck" v-if="downloadJnlpId !== null">
+            <strong>Good luck, your download should begin shortly.</strong> Your match is listed below in the latest Blackbox round.
+            If your download fails to start automatically, you can <a :href="`https://fumbbl.com/ffblive.jnlp?id=${downloadJnlpId}`">start the download here</a>.
+            <iframe :src="`https://fumbbl.com/ffblive.jnlp?id=${downloadJnlpId}`" height="0" width="0" />
+        </div>
+
         <div v-if="isNewDraw">
-            <a href="#" style="float: right;" @click.prevent="close">Return to Gamefinder</a>
+            <a href="#" @click.prevent="close">Return to Gamefinder</a>
         </div>
 
         <template v-if="!isNewDraw">
             <div class="nextdrawverysoon">
                 <div style="text-align: center;">The Blackbox draw will take place very soon.</div>
-                <div class="timerwrapper"><div class="timer" :style="{ width: (100 * secondsRemaining / 30) + '%', left: (50 - 50 * secondsRemaining / 30) + '%'}"></div></div>
+                <div class="timerwrapper"><div class="timer" :style="{ width: (100 * displaySecondsUntilDraw / 30) + '%', left: (50 - 50 * displaySecondsUntilDraw / 30) + '%'}"></div></div>
             </div>
             <div class="previousroundsheader">Previous rounds</div>
         </template>
+
         <blackboxroundhistory
             :raw-round-history="rawRoundHistory"
-            :is-new-draw="isNewDraw"></blackboxroundhistory>
+            :is-new-draw="isNewDraw"
+            :coach-name="coachName"></blackboxroundhistory>
     </div>
 </template>
 
@@ -27,28 +35,32 @@ import BlackboxRoundHistoryComponent from "./BlackboxRoundHistory.vue";
         'blackboxroundhistory': BlackboxRoundHistoryComponent,
     },
     props: {
+        joiningDraw: {
+            validator: function (joiningDraw) {
+                return typeof joiningDraw === 'object' || joiningDraw === null;
+            }
+        },
         rawRoundHistory: {
             type: Object,
             required: true,
         },
-        secondsRemaining: {
-            type: Number,
+        coachName: {
+            type: String,
             required: true,
-        },
+        }
     },
 })
 export default class BlackboxJoiningDrawComponent extends Vue {
-    public isNewDraw: boolean = false;
-
-    public mounted() {
-        this.updateIsNewDraw();
-        setInterval(this.updateIsNewDraw.bind(this), 1000);
+    public get isNewDraw(): boolean {
+        return this.$props.joiningDraw.drawnRoundTimestamp !== null;
     }
 
-    public updateIsNewDraw() {
-        // count it as a new draw if now is between the last update and 10 minutes later (the pause duration of Blackbox)
-        const pauseDuration = 10*60*1000;
-        this.isNewDraw = this.$props.rawRoundHistory.lastUpdated <= Date.now() && Date.now() <= this.$props.rawRoundHistory.lastUpdated + pauseDuration;
+    public get downloadJnlpId(): number | null {
+        return this.$props.joiningDraw.downloadJnlpId;
+    }
+
+    public get displaySecondsUntilDraw(): number {
+        return this.$props.joiningDraw.displaySecondsUntilDraw;
     }
     
     public close(): void {

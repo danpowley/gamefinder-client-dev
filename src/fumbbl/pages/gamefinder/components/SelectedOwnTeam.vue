@@ -1,6 +1,11 @@
 <template>
     <div id="selectedownteam" :class="{fadeout: fadeOut}">
-        <template v-if="team">
+        <template v-if="blackboxUserActivated">
+            <div>
+                You are activated to join the next Blackbox round. You can still send and receive Gamefinder offers up until 30 seconds before the draw.
+            </div>
+        </template>
+        <template v-else-if="team">
             <div class="logo">
                 <img :src="getTeamLogoUrl(team)" />
             </div>
@@ -37,6 +42,10 @@ import GameFinderHelpers from '../include/GameFinderHelpers';
             }
         },
         teamSettingsEnabled: {
+            type: Boolean,
+            required: true
+        },
+        blackboxUserActivated: {
             type: Boolean,
             required: true
         },

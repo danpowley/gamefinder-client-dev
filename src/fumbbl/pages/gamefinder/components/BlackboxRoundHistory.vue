@@ -15,13 +15,18 @@
                                         {{ match.team1.teamName }}
                                     </div>
                                     <div class="desc">
-                                        ({{ match.team1.coachRating }}) {{ match.team1.coach }} {{ match.team1.teamValue/1000 }}k {{ match.team1.roster }}
+                                        ({{ match.team1.coachRating }}) <span :class="{isusercoach: match.team1.isUserCoach}">{{ match.team1.coach }}</span> {{ match.team1.teamValue/1000 }}k {{ match.team1.roster }}
                                     </div>
                                 </div>
                                 <div class="homeicon">
                                     <img :src="'https://fumbbl.com/i/' + match.team1.logo32">
                                 </div>
-                                <div class="versus">versus</div>
+                                <div v-if="match.team1.isUserCoach || match.team2.isUserCoach" class="versus ownmatch">
+                                    &#x2605;
+                                </div>
+                                <div v-else class="versus">
+                                    versus
+                                </div>
                                 <div class="awayicon">
                                     <img :src="'https://fumbbl.com/i/' + match.team2.logo32">
                                 </div>
@@ -30,7 +35,7 @@
                                         {{ match.team2.teamName }}
                                     </div>
                                     <div class="desc">
-                                        {{ match.team2.roster }} {{ match.team2.teamValue/1000 }}k {{ match.team2.coach }} ({{ match.team2.coachRating }})
+                                        {{ match.team2.roster }} {{ match.team2.teamValue/1000 }}k <span :class="{isusercoach: match.team2.isUserCoach}">{{ match.team2.coach }}</span> ({{ match.team2.coachRating }})
                                     </div>
                                 </div>
                             </div>
@@ -64,6 +69,10 @@ import Component from 'vue-class-component';
             type: Boolean,
             required: true,
         },
+        coachName: {
+            type: String,
+            required: true,
+        }
     },
 })
 export default class BlackboxRoundHistoryComponent extends Vue {
@@ -85,6 +94,7 @@ export default class BlackboxRoundHistoryComponent extends Vue {
                         if (teamId == team1Id) {
                             match.team1 = {
                                 coach: coach.coach,
+                                isUserCoach: coach.coach === this.$props.coachName,
                                 coachRating: coach.rating,
                                 teamName: coach.teams[teamId].team,
                                 roster: coach.teams[teamId].roster,
@@ -96,6 +106,7 @@ export default class BlackboxRoundHistoryComponent extends Vue {
                         if (teamId == team2Id) {
                             match.team2 = {
                                 coach: coach.coach,
+                                isUserCoach: coach.coach === this.$props.coachName,
                                 coachRating: coach.rating,
                                 teamName: coach.teams[teamId].team,
                                 roster: coach.teams[teamId].roster,

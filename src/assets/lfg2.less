@@ -272,37 +272,6 @@
     .header {
       text-align: center;
     }
-    .blackboxmatch {
-      margin-bottom: 10px;
-      display: flex;
-      .homeicon {
-        width: 64px;
-      }
-      .details {
-        flex-grow: 1;
-        display: flex;
-        .homedetails {
-          padding-left: 10px;
-          width: 50%;
-        }
-        .awaydetails {
-          padding-right: 10px;
-          width: 50%;
-          text-align: right;
-        }
-      }
-      .awayicon {
-        width: 64px;
-      }
-      .name {
-        font-size: 12pt;
-        max-width: 220px;
-        .mixin_abbreviate();
-      }
-    }
-    .viewallrounds {
-      margin: 10px 0;
-    }
   }
 
   #gamefindergrid {
@@ -1168,16 +1137,23 @@
       }
     }
 
+    .goodluck {
+      background-color: @OldLace;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+
     .latestroundheader {
       font-size: 13pt;
-      margin-top: 20px;
-      margin-bottom: 15px;
+      margin-top: 10px;
+      margin-bottom: 5px;
     }
 
     .previousroundsheader {
       font-size: 11pt;
-      margin-top: 20px;
-      margin-bottom: 10px;
+      margin-top: 15px;
+      margin-bottom: 5px;
     }
 
     .nextdrawverysoon {
@@ -1244,7 +1220,10 @@
         padding-top: 10px;
         width: 90px;
         text-align: center;
-
+        &.ownmatch {
+          font-size: 18pt;
+          padding-top: 4px;
+        }
       }
       .name {
         font-size: 11pt;
@@ -1253,6 +1232,9 @@
       }
       .desc {
         font-size: 9pt;
+      }
+      .isusercoach {
+        font-weight: bold;
       }
     }
   }

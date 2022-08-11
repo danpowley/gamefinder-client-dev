@@ -7,7 +7,8 @@
             </div>
             <blackboxroundhistory
                 :raw-round-history="rawRoundHistory"
-                :is-new-draw="false"></blackboxroundhistory>
+                :is-new-draw="false"
+                :coach-name="coachName"></blackboxroundhistory>
         </div>
     </div>
 </template>
@@ -30,6 +31,10 @@ import BlackboxRoundHistoryComponent from "./BlackboxRoundHistory.vue";
             type: Object,
             required: true,
         },
+        coachName: {
+            type: String,
+            required: true,
+        }
     },
 })
 export default class TeamSettingsComponent extends Vue {
