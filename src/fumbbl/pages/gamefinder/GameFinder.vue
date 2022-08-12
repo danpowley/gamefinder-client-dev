@@ -256,6 +256,15 @@ import { AxiosError } from "axios";
                 this.refreshBlackboxRoundHistory();
             }
         },
+        'matchesAndTeamsState.blackbox.userActivated'(newVal, oldVal) {
+            // @ts-ignore
+            this.blackboxJoiningDraw = {
+                displaySecondsUntilDraw: 0,
+                previousRoundTimestamp: null,
+                drawnRoundTimestamp: null,
+                downloadJnlpId: null,
+            };
+        },
     }
 })
 export default class GameFinder extends Vue {
@@ -856,21 +865,11 @@ export default class GameFinder extends Vue {
         this.allowRejoinAfterDownload = false;
         this.schedulingErrorMessage = null;
 
-        this.blackboxReset();
+        await this.backendApi.blackboxDeactivate();
 
         await this.activate();
         await this.getState();
         this.stateUpdatesArePaused = false;
-    }
-
-    public blackboxReset() {
-        this.blackboxJoiningDraw = {
-            displaySecondsUntilDraw: 0,
-            previousRoundTimestamp: null,
-            drawnRoundTimestamp: null,
-            downloadJnlpId: null,
-        };
-        this.backendApi.blackboxDeactivate();
     }
 
     public get blackboxTeamCount(): number {
@@ -894,7 +893,7 @@ export default class GameFinder extends Vue {
     }
 
     public handleBlackboxDeactivation(): void {
-        this.blackboxReset();
+        this.backendApi.blackboxDeactivate();
     }
 
     public async refreshBlackboxRoundHistory() {
