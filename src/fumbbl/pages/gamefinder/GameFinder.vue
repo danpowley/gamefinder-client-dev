@@ -141,8 +141,7 @@
                     @show-dialog="handleShowDialog"
                     @launch-game="handleLaunchGame"
                     @download-jnlp="handleDownloadJnlp"
-                    @scheduling-error="handleSchedulingError"
-                    @blackbox-download-jnlp-id="handleBlackboxDownloadJnlpId"></offers>
+                    @scheduling-error="handleSchedulingError"></offers>
             </div>
             <div id="opponents">
                 <blackboxjoiningdraw
@@ -748,13 +747,6 @@ export default class GameFinder extends Vue {
         }
     }
 
-    public handleBlackboxDownloadJnlpId(blackboxDownloadJnlpId: number): void {
-        if (!this.isLockedForBlackboxDraw) {
-            return;
-        }
-        this.blackboxJoiningDraw.downloadJnlpId = blackboxDownloadJnlpId;
-    }
-
     public declineGame()
     {
         if (this.startDialogOffer === null) {
@@ -945,6 +937,14 @@ export default class GameFinder extends Vue {
             this.blackboxJoiningDraw.drawnRoundTimestamp = this.rawBlackboxRoundHistory.lastUpdated;
         }
 
+        // Check if the download can be started
+        if (
+            this.blackboxJoiningDraw.drawnRoundTimestamp !== null
+            && this.blackboxJoiningDraw.downloadJnlpId === null
+        ) {
+            this.blackboxJoiningDraw.downloadJnlpId = this.getBlackboxJnlpIdFromLatestDraw();
+        }
+
         // update seconds remaining, but only if we're in the pre-draw (previous round)
         if (this.blackboxJoiningDraw.previousRoundTimestamp === this.rawBlackboxRoundHistory.lastUpdated) {
             if (this.matchesAndTeamsState.blackbox.status === 'Active' && this.matchesAndTeamsState.blackbox.secondsRemaining > 0) {
@@ -953,6 +953,34 @@ export default class GameFinder extends Vue {
                 this.blackboxJoiningDraw.displaySecondsUntilDraw = 0;
             }
         }
+    }
+
+    public getBlackboxJnlpIdFromLatestDraw(): number | null {
+        if (this.rawBlackboxRoundHistory === null || this.rawBlackboxRoundHistory.rawRounds.length === 0) {
+            return null;
+        }
+
+        const rawLatestRound = this.rawBlackboxRoundHistory.rawRounds[0];
+
+        let coachTeamIdsLookup = [];
+
+        for (const coach of rawLatestRound.teamData) {
+            if (coach.coach === this.coachName) {
+                coachTeamIdsLookup = Object.keys(coach.teams).map((teamId) => parseInt(teamId) );
+                break;
+            }
+        }
+
+        for (const scheduledMatch of rawLatestRound.data.ScheduledMatches) {
+            if (coachTeamIdsLookup.includes(scheduledMatch.Team1.TeamId)) {
+                return scheduledMatch.Team1.TeamId;
+            }
+            if (coachTeamIdsLookup.includes(scheduledMatch.Team2.TeamId)) {
+                return scheduledMatch.Team2.TeamId;
+            }
+        }
+
+        return null;
     }
 
     public pluralise(quantity: number, singular: string, plural: string): string {

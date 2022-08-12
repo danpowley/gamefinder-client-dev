@@ -168,7 +168,6 @@ export default class OffersComponent extends Vue {
 
             if (offer.clientId && offer.clientId !== 0) {
                 downloadJnlpOffer = offerCreated;
-                downloadJnlpOffer.isBlackbox = offer.clientId === -1; // Blackbox offers always have a clientId of -1
             }
 
             if (offer.schedulingError) {
@@ -186,10 +185,6 @@ export default class OffersComponent extends Vue {
         this.$emit('launch-game', launchGameOffer);
         this.$emit('download-jnlp', downloadJnlpOffer);
         this.$emit('scheduling-error', schedulingErrorMessage);
-
-        if (downloadJnlpOffer !== null && downloadJnlpOffer.isBlackbox) {
-            this.$emit('blackbox-download-jnlp-id', downloadJnlpOffer.home.id);
-        }
     }
 
     private processOffers() {
