@@ -181,10 +181,8 @@
       }
 
       .controls {
-        padding: 0 10px 0 6px;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        align-items: center;
+        padding: 10px;
+        display: flex;
         background: @OldLace;
         height: 45px;
         border-bottom: solid @Forest 1px;
@@ -194,12 +192,21 @@
         z-index: 2;
 
         .selectall {
+          flex-grow: 1;
           input[type=checkbox] {
             margin-right: 10px;
           }
           label {
             font-size: 11pt;
           }
+        }
+        .activate {
+          text-align: right;
+          flex-grow: 1;
+        }
+        .changemodes {
+          width: 150px;
+          text-align: right;
         }
       }
     }
